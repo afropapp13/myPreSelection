@@ -1869,9 +1869,9 @@ void mcc9_10_true_neutrino_selection::Init(TTree *tree)
    mc_completeness = 0;
    mc_purity = 0;
    endmuonprocess = 0;
-/*   weightsFlux = 0;
+   weightsFlux = 0;
    weightsGenie = 0;
-   weightsReint = 0;*/
+   weightsReint = 0;
    flash_pe_flash_matching_v = 0;
    slice_pe_flash_matching_v = 0;
    cosmic_flashmatch_score_v = 0;
@@ -2456,13 +2456,13 @@ void mcc9_10_true_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("filter_ccinclusive", &filter_ccinclusive, &b_filter_ccinclusive);
 /*   fChain->SetBranchAddress("weights", &weights, &b_weights);
    fChain->SetBranchAddress("weights.first", weights_first, &b_weights_first);
-   fChain->SetBranchAddress("weights.second", weights_second, &b_weights_second);
+   fChain->SetBranchAddress("weights.second", weights_second, &b_weights_second);*/
    fChain->SetBranchAddress("weightsFlux", &weightsFlux, &b_weightsFlux);
    fChain->SetBranchAddress("weightsGenie", &weightsGenie, &b_weightsGenie);
    fChain->SetBranchAddress("weightsReint", &weightsReint, &b_weightsReint);
    fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
    fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
-   fChain->SetBranchAddress("weightSplineTimesTune", &weightSplineTimesTune, &b_weightSplineTimesTune);*/
+   fChain->SetBranchAddress("weightSplineTimesTune", &weightSplineTimesTune, &b_weightSplineTimesTune);
    fChain->SetBranchAddress("knobRPAup", &knobRPAup, &b_knobRPAup);
    fChain->SetBranchAddress("knobRPAdn", &knobRPAdn, &b_knobRPAdn);
    fChain->SetBranchAddress("knobCCMECup", &knobCCMECup, &b_knobCCMECup);

@@ -710,7 +710,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	// Only for MC 
 	// Need to take care of the bug fix / T2K tune weights & for the systematics weights
 
-	/*if (string(fLabel).find("Overlay") != std::string::npos) {
+	if (string(fLabel).find("Overlay") != std::string::npos) {
 
 		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
 		fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
@@ -740,7 +740,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		}
 
-	}*/
+	}
 
 	// -----------------------------------------------------------------------------
 
@@ -762,7 +762,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// Weights for systematics
 
-		/*if (string(fLabel).find("Overlay") != std::string::npos) {
+		if (string(fLabel).find("Overlay") != std::string::npos) {
 
 			Weight = weightSpline;
 			T2KWeight = weightTune;
@@ -811,7 +811,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 			}
 
-		} else {*/
+		} else {
 
 			// For BeamOn, everything will be 1
 			// For BeamOff, the POTScale should be different based on the triggers
@@ -821,7 +821,7 @@ void mcc9_10_neutrino_selection::Loop() {
 			T2KWeight = 1.;
 			ROOTinoWeight = 1.;
 
-		/*}*/
+		}
 
 		// -----------------------------------------------------------------------------------------------------------------------------------
 		// -----------------------------------------------------------------------------------------------------------------------------------

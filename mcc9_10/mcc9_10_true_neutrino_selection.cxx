@@ -482,7 +482,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 	// Only for MC CV / Dirt
 	// Need to take care of the weights for the systematics
-/* // apapadop
+
 	if (string(fLabel).find("Overlay") != std::string::npos) {
 
 		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
@@ -512,9 +512,9 @@ void mcc9_10_true_neutrino_selection::Loop() {
 		}
 
 	}
-*/ // apapadop
+
 	// -----------------------------------------------------------------------------
-cout << "nentries " << nentries << endl; 
+
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
 
 		// -----------------------------------------------------------------------------
@@ -532,7 +532,7 @@ cout << "nentries " << nentries << endl;
 		// -----------------------------------------------------------------------------------------------------------------------------------
 
 		// Weights for systematics
-/* // apapadop: Rm when the weights become available
+
 		if (string(fLabel).find("Overlay") != std::string::npos) {
 
 			Weight = weightSpline;
@@ -582,7 +582,7 @@ cout << "nentries " << nentries << endl;
 			}
 
 		} else {
-*/ // apapadop
+
 			// For BeamOn, everything will be 1
 			// For BeamOff, the POTScale should be different based on the triggers
 			// For MC, we need the POTCount for each one of the samples
@@ -590,9 +590,9 @@ cout << "nentries " << nentries << endl;
 			Weight = 1.;
 			T2KWeight = 1.;
 			ROOTinoWeight = 1.;
-/* // apapadop
+
 		}
-*/ // apapadop
+
 		// ------------------------------------------------------------------------------------------------------------------------------
 
 		// Muon MCParticles
