@@ -261,7 +261,36 @@ void mcc9_10_neutrino_selection::Loop() {
 
 
 	std::vector<double> StartToStartDistance;
-	std::vector<double> EndToEndDistance;	
+	std::vector<double> EndToEndDistance;
+	
+	//----------------------------------------//
+
+	// Blip info
+
+	Int_t           nBlips_saved;
+	vector<float>   Blip_x;
+	vector<float>   Blip_y;
+	vector<float>   Blip_z;
+	vector<float>   Blip_size;
+	vector<float>   Blip_energy;
+	vector<float>   Blip_charge;
+	vector<int>     Blip_nplanes;
+	vector<float>   Blip_proxtrkdist;
+	vector<int>     Blip_proxtrkid;
+	vector<bool>    Blip_touchtrk;
+	vector<int>     Blip_touchtrkid;
+	vector<float>   Blip_badwirefrac;
+	vector<int>     Blip_pl0_nwires;
+	vector<int>     Blip_pl1_nwires;
+	vector<int>     Blip_pl2_nwires;
+	vector<bool>    Blip_pl0_bydeadwire;
+	vector<bool>    Blip_pl1_bydeadwire;
+	vector<bool>    Blip_pl2_bydeadwire;
+	vector<int>     Blip_pl0_centerwire;
+	vector<int>     Blip_pl1_centerwire;
+	vector<int>     Blip_pl2_centerwire;
+	vector<int>     Blip_true_g4id;
+	vector<float>   Blip_true_energy;
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------
 	// -------------------------------------------------------------------------------------------------------------------------------------------	
@@ -476,9 +505,37 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("True_DeltaTheta",&True_DeltaTheta);
 	tree->Branch("True_ThetaVis",&True_ThetaVis);
 
-
 	tree->Branch("StartToStartDistance",&StartToStartDistance);
-	tree->Branch("EndToEndDistance",&EndToEndDistance);						
+	tree->Branch("EndToEndDistance",&EndToEndDistance);	
+	
+	//----------------------------------------//
+
+	// Blip info
+
+	tree->Branch("nBlips_saved",&nBlips_saved);
+	tree->Branch("Blip_x",&Blip_x);
+	tree->Branch("Blip_y",&Blip_y);
+	tree->Branch("Blip_z",&Blip_z);
+	tree->Branch("Blip_size",&Blip_size);
+	tree->Branch("Blip_energy",&Blip_energy);
+	tree->Branch("Blip_charge",&Blip_charge);
+	tree->Branch("Blip_nplanes",&Blip_nplanes);
+	tree->Branch("Blip_proxtrkdist",&Blip_proxtrkdist);
+	tree->Branch("Blip_proxtrkid",&Blip_proxtrkid);
+	tree->Branch("Blip_touchtrk",&Blip_touchtrk);
+	tree->Branch("Blip_touchtrkid",&Blip_touchtrkid);
+	tree->Branch("Blip_badwirefrac",&Blip_badwirefrac);
+	tree->Branch("Blip_pl0_nwires",&Blip_pl0_nwires);
+	tree->Branch("Blip_pl1_nwires",&Blip_pl1_nwires);
+	tree->Branch("Blip_pl2_nwires",&Blip_pl2_nwires);
+	tree->Branch("Blip_pl0_bydeadwire",&Blip_pl0_bydeadwire);
+	tree->Branch("Blip_pl1_bydeadwire",&Blip_pl1_bydeadwire);
+	tree->Branch("Blip_pl2_bydeadwire",&Blip_pl2_bydeadwire);
+	tree->Branch("Blip_pl0_centerwire",&Blip_pl0_centerwire);
+	tree->Branch("Blip_pl1_centerwire",&Blip_pl1_centerwire);
+	tree->Branch("Blip_pl2_centerwire",&Blip_pl2_centerwire);
+	tree->Branch("Blip_true_g4id",&Blip_true_g4id);	
+	tree->Branch("Blip_true_energy",&Blip_true_energy);
 
 	// -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -653,7 +710,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	// Only for MC 
 	// Need to take care of the bug fix / T2K tune weights & for the systematics weights
 
-	if (string(fLabel).find("Overlay") != std::string::npos) {
+	/*if (string(fLabel).find("Overlay") != std::string::npos) {
 
 		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
 		fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
@@ -683,7 +740,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		}
 
-	}
+	}*/
 
 	// -----------------------------------------------------------------------------
 
@@ -705,7 +762,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// Weights for systematics
 
-		if (string(fLabel).find("Overlay") != std::string::npos) {
+		/*if (string(fLabel).find("Overlay") != std::string::npos) {
 
 			Weight = weightSpline;
 			T2KWeight = weightTune;
@@ -754,7 +811,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 			}
 
-		} else {
+		} else {*/
 
 			// For BeamOn, everything will be 1
 			// For BeamOff, the POTScale should be different based on the triggers
@@ -764,7 +821,7 @@ void mcc9_10_neutrino_selection::Loop() {
 			T2KWeight = 1.;
 			ROOTinoWeight = 1.;
 
-		}
+		/*}*/
 
 		// -----------------------------------------------------------------------------------------------------------------------------------
 		// -----------------------------------------------------------------------------------------------------------------------------------
@@ -913,9 +970,36 @@ void mcc9_10_neutrino_selection::Loop() {
 		True_DeltaTheta.clear();
 		True_ThetaVis.clear();
 
-
 		StartToStartDistance.clear();
 		EndToEndDistance.clear();
+
+		//----------------------------------------//		
+
+		// Blips
+
+		Blip_x.clear();
+		Blip_y.clear();
+		Blip_z.clear();
+		Blip_size.clear();
+		Blip_energy.clear();
+		Blip_charge.clear();
+		Blip_nplanes.clear();
+		Blip_proxtrkdist.clear();
+		Blip_proxtrkid.clear();
+		Blip_touchtrk.clear();
+		Blip_touchtrkid.clear();
+		Blip_badwirefrac.clear();
+		Blip_pl0_nwires.clear();
+		Blip_pl1_nwires.clear();
+		Blip_pl2_nwires.clear();
+		Blip_pl0_bydeadwire.clear();
+		Blip_pl1_bydeadwire.clear();
+		Blip_pl2_bydeadwire.clear();
+		Blip_pl0_centerwire.clear();
+		Blip_pl1_centerwire.clear();
+		Blip_pl2_centerwire.clear();
+		Blip_true_g4id.clear();
+		Blip_true_energy.clear();		
 
 		// -----------------------------------------------------------------------------
 
@@ -1609,6 +1693,35 @@ void mcc9_10_neutrino_selection::Loop() {
 		// ---------------------------------------------------------------------------------------------------------------------------------
 
 		EventCounter++;
+
+		//----------------------------------------//		
+
+		// Blips
+
+		nBlips_saved = nblips_saved;
+		Blip_x = *blip_x;
+		Blip_y = *blip_y ;
+		Blip_z = *blip_z;
+		Blip_size = *blip_size;
+		Blip_energy = *blip_energy;
+		Blip_charge = *blip_charge;
+		Blip_nplanes = *blip_nplanes;
+		Blip_proxtrkdist = *blip_proxtrkdist;
+		Blip_proxtrkid = *blip_proxtrkid;
+		Blip_touchtrk = *blip_touchtrk;
+		Blip_touchtrkid = *blip_touchtrkid;
+		Blip_badwirefrac = *blip_badwirefrac;
+		Blip_pl0_nwires = *blip_pl0_nwires;
+		Blip_pl1_nwires = *blip_pl1_nwires;
+		Blip_pl2_nwires = *blip_pl2_nwires;
+		Blip_pl0_bydeadwire = *blip_pl0_bydeadwire;
+		Blip_pl1_bydeadwire = *blip_pl1_bydeadwire;
+		Blip_pl2_bydeadwire = *blip_pl2_bydeadwire;
+		Blip_pl0_centerwire = *blip_pl0_centerwire;
+		Blip_pl1_centerwire = *blip_pl1_centerwire;
+		Blip_pl2_centerwire = *blip_pl2_centerwire;
+		Blip_true_g4id = *blip_true_g4id;
+		Blip_true_energy = *blip_true_energy;			
 
 		// ---------------------------------------------------------------------------------------------------------------------------------
 
