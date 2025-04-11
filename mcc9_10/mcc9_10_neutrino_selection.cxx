@@ -669,7 +669,16 @@ void mcc9_10_neutrino_selection::Loop() {
 		EXT = FullEXT_Run4b;
 		run_period = "Run4b";	
 
-	}			
+	}	
+	
+	if (string(fLabel).find("mcc9_10_Run4b") != std::string::npos) {
+
+		tor860_wcut = Fulltor860_wcut_mcc9_10_Run4b;
+		E1DCNT_wcut = FullE1DCNT_wcut_mcc9_10_Run4b;
+		EXT = FullEXT_mcc9_10_Run4b;
+		run_period = "mcc9_10_Run4b";	
+
+	}		
 
 	if (string(fLabel).find("Run4c") != std::string::npos) {
 
