@@ -39,6 +39,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	if (fChain == 0) return;
 
 	Long64_t nentries = fChain->GetEntriesFast();
+	cout << "file entries = " << nentries << endl;
 	Long64_t nbytes = 0, nb = 0;
 
 	// ----------------------------------------------------------------------------------------------------------------------------------------
@@ -53,6 +54,9 @@ void mcc9_10_neutrino_selection::Loop() {
 	double T2KWeight;
 	double ROOTinoWeight;
 	double POTWeight;
+
+	float wc_kine_numu_score;
+	float wc_numu_cc_flag;
 
 	int Run;
 	int SubRun;
@@ -106,6 +110,9 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------
 
+	float ns_time;
+	int slice_id;
+	float orig_nuscore;
 	float NuScore;
 	float FlashScore; 
 	float fCosmicIPAll3D;
@@ -259,7 +266,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> True_DeltaTheta;	
 	std::vector<double> True_ThetaVis;	
 
-
 	std::vector<double> StartToStartDistance;
 	std::vector<double> EndToEndDistance;
 	
@@ -300,6 +306,8 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("ROOTinoWeight",&ROOTinoWeight);	
 	tree->Branch("POTWeight",&POTWeight);	
 
+	tree->Branch("wc_numu_score",&wc_kine_numu_score);
+	tree->Branch("wc_numu_cc_flag",&wc_numu_cc_flag);
 	tree->Branch("Run",&Run);
 	tree->Branch("SubRun",&SubRun);
 	tree->Branch("Event",&Event);	
@@ -351,7 +359,10 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------
 
+	tree->Branch("ns_time",&ns_time);
 	tree->Branch("NuScore",&NuScore);
+	tree->Branch("orig_nuscore",&orig_nuscore);
+	tree->Branch("slice_id",&slice_id);		
 	tree->Branch("FlashScore",&FlashScore);
 	tree->Branch("CosmicIPAll3D",&fCosmicIPAll3D);
 	tree->Branch("CosmicDirAll3D",&fCosmicDirAll3D);
@@ -671,12 +682,21 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	}	
 	
-	if (string(fLabel).find("mcc9_10_Run4b") != std::string::npos) {
+	if (string(fLabel).find("Run4b_standalone") != std::string::npos) {
 
-		tor860_wcut = Fulltor860_wcut_mcc9_10_Run4b;
-		E1DCNT_wcut = FullE1DCNT_wcut_mcc9_10_Run4b;
-		EXT = FullEXT_mcc9_10_Run4b;
-		run_period = "mcc9_10_Run4b";	
+		tor860_wcut = Fulltor860_wcut_mcc9_10_Run4b_standalone;
+		E1DCNT_wcut = FullE1DCNT_wcut_mcc9_10_Run4b_standalone;
+		EXT = FullEXT_mcc9_10_Run4b_standalone;
+		run_period = "mcc9_10_Run4b_standalone";	
+
+	}	
+	
+	if (string(fLabel).find("Run4b_unified") != std::string::npos) {
+
+		tor860_wcut = Fulltor860_wcut_mcc9_10_Run4b_unified;
+		E1DCNT_wcut = FullE1DCNT_wcut_mcc9_10_Run4b_unified;
+		EXT = FullEXT_mcc9_10_Run4b_unified;
+		run_period = "mcc9_10_Run4b_unified";	
 
 	}		
 
@@ -751,6 +771,30 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	}
 
+	//--------------------//
+
+	// WC Generic neutrino selection
+
+	float numu_cc_flag;
+	TBranch* b_numu_cc_flag;
+	Long64_t wc_nbytes = 0, wc_nb = 0;  
+	TTree* wc = nullptr;
+
+	float numu_score;
+	TBranch* b_numu_score;
+	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;  	
+	TTree* wc_kine = nullptr;	
+
+	if (fSample.Contains("unified")) {
+
+		wc = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
+		wc->SetBranchAddress("numu_cc_flag", &numu_cc_flag, &b_numu_cc_flag);
+
+		wc_kine = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
+		wc_kine->SetBranchAddress("numu_score", &numu_score, &b_numu_score);		
+
+	}
+
 	// -----------------------------------------------------------------------------
 
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
@@ -759,11 +803,23 @@ void mcc9_10_neutrino_selection::Loop() {
       
 		Long64_t ientry = LoadTree(jentry);
 		if (ientry < 0) break;
-      		nb = fChain->GetEntry(jentry);   nbytes += nb;
+      	nb = fChain->GetEntry(jentry);   nbytes += nb;
+
+		if (fSample.Contains("unified")) {
+
+			Long64_t wc_i_entry = wc->LoadTree(jentry);
+			wc_nb = wc->GetEntry(jentry);   
+			wc_nbytes += wc_nb;	
+
+			Long64_t wc_kine_i_entry = wc_kine->LoadTree(jentry);
+			wc_kine_nb = wc_kine->GetEntry(jentry);   
+			wc_kine_nbytes += wc_kine_nb;				
+		
+		}
 
 		TotalCounter++;
 
-		// -----------------------------------------------------------------------------
+		//--------------------//
 
 		if (jentry%1000 == 0) std::cout << jentry/1000 << " k " << std::setprecision(3) << double(jentry)/nentries*100. << " %"<< std::endl;
 
@@ -1085,12 +1141,27 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// Start filling the TTree with events of interest
 
+		if (fSample.Contains("unified")) {
+			
+			wc_numu_cc_flag = numu_cc_flag;
+			wc_kine_numu_score = numu_score;			 
+		
+		} else { 
+			
+			wc_numu_cc_flag = 1; 
+			wc_kine_numu_score = 1; 			
+		
+		}
+
 		Run = run;
 		SubRun = sub;
 		Event = evt;
 
-		NuScore = topological_score; // double check
-		FlashScore = nu_flashmatch_score; // double check
+		ns_time = interaction_time_abs;
+		slice_id = slice_orig_pass_id; // whether the event passes the mcc9 slicing
+		NuScore = topological_score; // new Pandora / NuGraph score
+		orig_nuscore = slice_orig_topo_score; // old Pandora score		
+		FlashScore = nu_flashmatch_score;
 		fCosmicIPAll3D = CosmicIPAll3D;
 		fCosmicDirAll3D = CosmicDirAll3D;
 		fcrtveto = crtveto;

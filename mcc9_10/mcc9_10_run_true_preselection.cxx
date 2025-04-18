@@ -9,8 +9,14 @@
 
 	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run1"); SamplePath.push_back("/exp/uboone/app/users/eyandel/combined_reco/tests/combine_reco_ana_hist.root");
 	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run1"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_overlay_test_85files_noweights.root");
-	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_overlay_test_500files_weights.root");
-	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_noweights"); SamplePath.push_back("/pnfs/uboone/persistent/users/apapadop/mcc9_10/mcc9_10_pelee_ntuple.root");
+	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_overlay_test_500files_weights.root");
+	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_noweights"); SamplePath.push_back("/pnfs/uboone/persistent/users/apapadop/mcc9_10/mcc9_10_pelee_ntuple.root");
+	
+	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_standalone"); SamplePath.push_back("/pnfs/uboone/scratch/users/rcross/hadd/MCC9.10_Test_Samples_v10_04_07_04_Run4b_pandora_standalone_reco2_BNB_nu_overlay_reco2_ana.root");	
+	WhichSampleArray.push_back("mcc9_10_OverlayDirt9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_04_Run4b_pandora_standalone_reco2_BNB_dirt_reco2_ana.root");	
+
+	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/MCC9.10_Test_Samples_v10_04_07_04_Run4b_super_unified_reco2_BNB_nu_overlay_reco2_hist.root");	
+	WhichSampleArray.push_back("mcc9_10_OverlayDirt9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/fgao/mini_retreat_2025/MCC9.10_Test_Samples_v10_04_07_04_Run4b_super_unified_reco2_BNB_dirt_reco2_hist.root");		
 	
 	// ---------------------------------------------------------------------------------- //
 	// ---------------------------------------------------------------------------------- //

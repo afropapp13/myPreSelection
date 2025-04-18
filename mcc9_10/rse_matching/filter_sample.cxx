@@ -14,7 +14,7 @@ void filter_sample() {
 
     // mcc9.10 sample
 
-    TFile* f_mcc9_10 = TFile::Open("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_data_run4b_v10_04_07_01_2000files.root", "readonly");
+    TFile* f_mcc9_10 = TFile::Open("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_03_Run4b_pandora_standalone_reco2_BNB_beam_on_reco2_ana.root", "readonly");
     TTree* t_mcc9_10 = (TTree*)(f_mcc9_10->Get("nuselection/NeutrinoSelectionFilter"));
 
     int mcc9_10_run, mcc9_10_sub, mcc9_10_evt;
@@ -33,7 +33,7 @@ void filter_sample() {
 
     // mcc9 sample
 
-    TFile* f_mcc9 = TFile::Open("/pnfs/uboone/persistent/users/cthorpe/PELEE_2023/run4b/run4b_bnb_beamon_crtremerging_pandora_reco2_run4b_ana.root", "readonly");    
+    TFile* f_mcc9 = TFile::Open("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/MCC9.10_Test_Samples_v10_04_07_03_Run4b_super_unified_reco2_BNB_beam_on_reco2_hist.root", "readonly");    
     TTree* t_mcc9 = (TTree*)(f_mcc9->Get("nuselection/NeutrinoSelectionFilter"));
 
     int mcc9_run, mcc9_sub, mcc9_evt;
