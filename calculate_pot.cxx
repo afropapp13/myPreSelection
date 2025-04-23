@@ -9,10 +9,10 @@
 #include <fstream>
 #include <stdlib.h>
 
-#include "../myClasses/Constants.h"
+#include "../../generators/constants.h"
 
 using namespace std;
-using namespace Constants;
+using namespace constants;
 
 void calculate_pot(TString Label, TString Sample) {
 	 
@@ -47,7 +47,7 @@ void calculate_pot(TString Label, TString Sample) {
 
 	// Output File
 
-	TString FileName = "/exp/uboone/data/users/"+UserID+"/PeLEETuples_Atmospherics/PreSelection_"+Label+"_"+UBCodeVersion+"_POT.root";
+	TString FileName = preselection_file_path + "/PreSelection_"+Label+"_POT.root";
 	TFile* OutputFile = new TFile(FileName,"recreate");
 	OutputFile->cd();
 	POTCountHist->Write();
