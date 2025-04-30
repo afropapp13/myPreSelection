@@ -14,7 +14,7 @@
 #include "string"
 #include "vector"
 
-#include "../../myClasses/Constants.h"
+#include "../../../generators/constants.h"
 
 #include <vector>
 #include <iostream>
@@ -22,7 +22,7 @@
 #include <string>
 #include <sstream>
 
-using namespace Constants;
+using namespace constants;
 
 class mcc9_10_neutrino_selection {
 
@@ -443,12 +443,12 @@ static constexpr Int_t kMaxweights = 4;
    map<string,vector<double> > *weights;
    string          weights_first[kMaxweights];
    vector<double>  weights_second[kMaxweights];
- /*  vector<unsigned short> *weightsFlux;
+   vector<unsigned short> *weightsFlux;
    vector<unsigned short> *weightsGenie;
    vector<unsigned short> *weightsReint;
-   */Float_t         weightSpline;
+   Float_t         weightSpline;
    Float_t         weightTune;
-   /*Float_t         weightSplineTimesTune;
+   Float_t         weightSplineTimesTune;
    Double_t        knobRPAup;
    Double_t        knobRPAdn;
    Double_t        knobCCMECup;
@@ -472,7 +472,7 @@ static constexpr Int_t kMaxweights = 4;
    Double_t        knobxsr_scc_Fa3up;
    Double_t        knobxsr_scc_Fa3dn;
    Double_t        RootinoFix;
- */  Float_t         flash_pe_flash_matching;
+   Float_t         flash_pe_flash_matching;
    vector<float>   *flash_pe_flash_matching_v;
    vector<float>   *slice_pe_flash_matching_v;
    Float_t         flash_time_flash_matching;
@@ -1282,15 +1282,15 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_filter_pi0;   //!
    TBranch        *b_filter_ccinclusive;   //!
    TBranch        *b_weights;   //!
- /*  TBranch        *b_weights_first;   //!
+   TBranch        *b_weights_first;   //!
    TBranch        *b_weights_second;   //!
    TBranch        *b_weightsFlux;   //!
    TBranch        *b_weightsGenie;   //!
    TBranch        *b_weightsReint;   //!
-*/   TBranch        *b_weightSpline;   //!
+   TBranch        *b_weightSpline;   //!
    TBranch        *b_weightTune;   //!
    TBranch        *b_weightSplineTimesTune;   //!
-/*   TBranch        *b_knobRPAup;   //!
+   TBranch        *b_knobRPAup;   //!
    TBranch        *b_knobRPAdn;   //!
    TBranch        *b_knobCCMECup;   //!
    TBranch        *b_knobCCMECdn;   //!
@@ -1313,7 +1313,7 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_knobxsr_scc_Fa3up;   //!
    TBranch        *b_knobxsr_scc_Fa3dn;   //!
    TBranch        *b_RootinoFix;   //!
- */  TBranch        *b_flash_pe_flash_matching;   //!
+   TBranch        *b_flash_pe_flash_matching;   //!
    TBranch        *b_flash_pe_flash_matching_v;   //!
    TBranch        *b_slice_pe_flash_matching_v;   //!
    TBranch        *b_flash_time_flash_matching;   //!
@@ -1877,10 +1877,10 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    mc_completeness = 0;
    mc_purity = 0;
    endmuonprocess = 0;
- /*  weightsFlux = 0;
+   weightsFlux = 0;
    weightsGenie = 0;
    weightsReint = 0;
- */  flash_pe_flash_matching_v = 0;
+   flash_pe_flash_matching_v = 0;
    slice_pe_flash_matching_v = 0;
    cosmic_flashmatch_score_v = 0;
    cosmic_topological_score_v = 0;
@@ -2463,39 +2463,10 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("filter_ncpi0", &filter_ncpi0, &b_filter_ncpi0);
    fChain->SetBranchAddress("filter_pi0", &filter_pi0, &b_filter_pi0);
    fChain->SetBranchAddress("filter_ccinclusive", &filter_ccinclusive, &b_filter_ccinclusive);
-/*   fChain->SetBranchAddress("weights", &weights, &b_weights);
+   /*fChain->SetBranchAddress("weights", &weights, &b_weights);
    fChain->SetBranchAddress("weights.first", weights_first, &b_weights_first);
    fChain->SetBranchAddress("weights.second", weights_second, &b_weights_second);*/
-   /*fChain->SetBranchAddress("weightsFlux", &weightsFlux, &b_weightsFlux);
-   fChain->SetBranchAddress("weightsGenie", &weightsGenie, &b_weightsGenie);
-   fChain->SetBranchAddress("weightsReint", &weightsReint, &b_weightsReint);
-   fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
-   fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
-   fChain->SetBranchAddress("weightSplineTimesTune", &weightSplineTimesTune, &b_weightSplineTimesTune);
-   fChain->SetBranchAddress("knobRPAup", &knobRPAup, &b_knobRPAup);
-   fChain->SetBranchAddress("knobRPAdn", &knobRPAdn, &b_knobRPAdn);
-   fChain->SetBranchAddress("knobCCMECup", &knobCCMECup, &b_knobCCMECup);
-   fChain->SetBranchAddress("knobCCMECdn", &knobCCMECdn, &b_knobCCMECdn);
-   fChain->SetBranchAddress("knobAxFFCCQEup", &knobAxFFCCQEup, &b_knobAxFFCCQEup);
-   fChain->SetBranchAddress("knobAxFFCCQEdn", &knobAxFFCCQEdn, &b_knobAxFFCCQEdn);
-   fChain->SetBranchAddress("knobVecFFCCQEup", &knobVecFFCCQEup, &b_knobVecFFCCQEup);
-   fChain->SetBranchAddress("knobVecFFCCQEdn", &knobVecFFCCQEdn, &b_knobVecFFCCQEdn);
-   fChain->SetBranchAddress("knobDecayAngMECup", &knobDecayAngMECup, &b_knobDecayAngMECup);
-   fChain->SetBranchAddress("knobDecayAngMECdn", &knobDecayAngMECdn, &b_knobDecayAngMECdn);
-   fChain->SetBranchAddress("knobThetaDelta2Npiup", &knobThetaDelta2Npiup, &b_knobThetaDelta2Npiup);
-   fChain->SetBranchAddress("knobThetaDelta2Npidn", &knobThetaDelta2Npidn, &b_knobThetaDelta2Npidn);
-   fChain->SetBranchAddress("knobThetaDelta2NRadup", &knobThetaDelta2NRadup, &b_knobThetaDelta2NRadup);
-   fChain->SetBranchAddress("knobThetaDelta2NRaddn", &knobThetaDelta2NRaddn, &b_knobThetaDelta2NRaddn);
-   fChain->SetBranchAddress("knobNormCCCOHup", &knobNormCCCOHup, &b_knobNormCCCOHup);
-   fChain->SetBranchAddress("knobNormCCCOHdn", &knobNormCCCOHdn, &b_knobNormCCCOHdn);
-   fChain->SetBranchAddress("knobNormNCCOHup", &knobNormNCCOHup, &b_knobNormNCCOHup);
-   fChain->SetBranchAddress("knobNormNCCOHdn", &knobNormNCCOHdn, &b_knobNormNCCOHdn);
-   fChain->SetBranchAddress("knobxsr_scc_Fv3up", &knobxsr_scc_Fv3up, &b_knobxsr_scc_Fv3up);
-   fChain->SetBranchAddress("knobxsr_scc_Fv3dn", &knobxsr_scc_Fv3dn, &b_knobxsr_scc_Fv3dn);
-   fChain->SetBranchAddress("knobxsr_scc_Fa3up", &knobxsr_scc_Fa3up, &b_knobxsr_scc_Fa3up);
-   fChain->SetBranchAddress("knobxsr_scc_Fa3dn", &knobxsr_scc_Fa3dn, &b_knobxsr_scc_Fa3dn);
-   fChain->SetBranchAddress("RootinoFix", &RootinoFix, &b_RootinoFix);
-   */fChain->SetBranchAddress("flash_pe_flash_matching", &flash_pe_flash_matching, &b_flash_pe_flash_matching);
+   fChain->SetBranchAddress("flash_pe_flash_matching", &flash_pe_flash_matching, &b_flash_pe_flash_matching);
    fChain->SetBranchAddress("flash_pe_flash_matching_v", &flash_pe_flash_matching_v, &b_flash_pe_flash_matching_v);
    fChain->SetBranchAddress("slice_pe_flash_matching_v", &slice_pe_flash_matching_v, &b_slice_pe_flash_matching_v);
    fChain->SetBranchAddress("flash_time_flash_matching", &flash_time_flash_matching, &b_flash_time_flash_matching);
