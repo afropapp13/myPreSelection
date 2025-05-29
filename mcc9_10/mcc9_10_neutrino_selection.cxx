@@ -55,7 +55,13 @@ void mcc9_10_neutrino_selection::Loop() {
 	double ROOTinoWeight;
 	double POTWeight;
 
+	float wc_single_photon_numu_score;
+	float wc_single_photon_other_score;
+	float wc_single_photon_ncpi0_score;
+	float wc_single_photon_nue_score;
+	float wc_numu_score;
 	float wc_nc_pio_score;
+	float wc_kine_pio_vtx_dis;
 	float wc_kine_pio_energy_1;
 	float wc_kine_pio_theta_1;
 	float wc_kine_pio_phi_1;
@@ -157,7 +163,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	vector<float>   Blip_x;
 	vector<float>   Blip_y;
 	vector<float>   Blip_z;
-	vector<float>   Blip_size;
 	vector<float>   Blip_energy;
 	vector<float>   Blip_charge;
 	vector<int>     Blip_nplanes;
@@ -165,18 +170,25 @@ void mcc9_10_neutrino_selection::Loop() {
 	vector<int>     Blip_proxtrkid;
 	vector<bool>    Blip_touchtrk;
 	vector<int>     Blip_touchtrkid;
-	vector<float>   Blip_badwirefrac;
 	vector<int>     Blip_pl0_nwires;
 	vector<int>     Blip_pl1_nwires;
 	vector<int>     Blip_pl2_nwires;
 	vector<bool>    Blip_pl0_bydeadwire;
 	vector<bool>    Blip_pl1_bydeadwire;
 	vector<bool>    Blip_pl2_bydeadwire;
-	vector<int>     Blip_pl0_centerwire;
-	vector<int>     Blip_pl1_centerwire;
-	vector<int>     Blip_pl2_centerwire;
 	vector<int>     Blip_true_g4id;
 	vector<float>   Blip_true_energy;
+
+	//--------------------//
+
+	// Pandora info
+
+	vector<unsigned int> pd_generation_v;
+	vector<float> pd_trk_score_v;
+	vector<float> pd_trk_llr_pid_score_v;
+
+	int pd_reco_track_count;
+	int pd_reco_shower_count;
 
 	//--------------------//
 
@@ -185,7 +197,14 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("ROOTinoWeight",&ROOTinoWeight);	
 	tree->Branch("POTWeight",&POTWeight);	
 
+	tree->Branch("wc_single_photon_numu_score",&wc_single_photon_numu_score);
+	tree->Branch("wc_single_photon_other_score",&wc_single_photon_other_score);
+	tree->Branch("wc_single_photon_ncpi0_score",&wc_single_photon_ncpi0_score);
+	tree->Branch("wc_single_photon_nue_score",&wc_single_photon_nue_score);
+
+	tree->Branch("wc_numu_score",&wc_numu_score);
 	tree->Branch("wc_nc_pio_score",&wc_nc_pio_score);
+	tree->Branch("wc_kine_pio_vtx_dis",&wc_kine_pio_vtx_dis);
 	tree->Branch("wc_kine_pio_energy_1",&wc_kine_pio_energy_1);
 	tree->Branch("wc_kine_pio_theta_1",&wc_kine_pio_theta_1);
 	tree->Branch("wc_kine_pio_phi_1",&wc_kine_pio_phi_1);
@@ -254,11 +273,28 @@ void mcc9_10_neutrino_selection::Loop() {
 		
 	//--------------------//
 
+	// wc pfparticles
+
+	std::vector<int> wc_reco_mother;
+	std::vector< std::vector<float> > wc_reco_p;
+	std::vector< std::vector<float> > wc_reco_start;
+	std::vector< std::vector<float> > wc_reco_end;
+	std::vector<int> wc_reco_pdg;
+	std::vector<int> wc_reco_id;
+
+	tree->Branch("wc_reco_mother",&wc_reco_mother);
+	tree->Branch("wc_reco_p",&wc_reco_p);
+	tree->Branch("wc_reco_start",&wc_reco_start);
+	tree->Branch("wc_reco_end",&wc_reco_end);
+	tree->Branch("wc_reco_pdg",&wc_reco_pdg);
+	tree->Branch("wc_reco_id",&wc_reco_id);	
+
+	//--------------------//
+
 	//pi0
 
 	tree->Branch("reco_alpha",&reco_alpha);	
 	tree->Branch("reco_shower_opening_angle",&reco_shower_opening_angle);	
-	tree->Branch("reco_pi0_p",&reco_pi0_p);	
 	tree->Branch("reco_pi0_p",&reco_pi0_p);	
 	tree->Branch("reco_pi0_phi",&reco_pi0_phi);
 	tree->Branch("reco_pi0_costheta",&reco_pi0_costheta);	
@@ -287,7 +323,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Blip_x",&Blip_x);
 	tree->Branch("Blip_y",&Blip_y);
 	tree->Branch("Blip_z",&Blip_z);
-	tree->Branch("Blip_size",&Blip_size);
 	tree->Branch("Blip_energy",&Blip_energy);
 	tree->Branch("Blip_charge",&Blip_charge);
 	tree->Branch("Blip_nplanes",&Blip_nplanes);
@@ -295,18 +330,24 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Blip_proxtrkid",&Blip_proxtrkid);
 	tree->Branch("Blip_touchtrk",&Blip_touchtrk);
 	tree->Branch("Blip_touchtrkid",&Blip_touchtrkid);
-	tree->Branch("Blip_badwirefrac",&Blip_badwirefrac);
 	tree->Branch("Blip_pl0_nwires",&Blip_pl0_nwires);
 	tree->Branch("Blip_pl1_nwires",&Blip_pl1_nwires);
 	tree->Branch("Blip_pl2_nwires",&Blip_pl2_nwires);
 	tree->Branch("Blip_pl0_bydeadwire",&Blip_pl0_bydeadwire);
 	tree->Branch("Blip_pl1_bydeadwire",&Blip_pl1_bydeadwire);
 	tree->Branch("Blip_pl2_bydeadwire",&Blip_pl2_bydeadwire);
-	tree->Branch("Blip_pl0_centerwire",&Blip_pl0_centerwire);
-	tree->Branch("Blip_pl1_centerwire",&Blip_pl1_centerwire);
-	tree->Branch("Blip_pl2_centerwire",&Blip_pl2_centerwire);
 	tree->Branch("Blip_true_g4id",&Blip_true_g4id);	
 	tree->Branch("Blip_true_energy",&Blip_true_energy);
+
+	//--------------------//
+
+	// Pandora info
+
+	tree->Branch("pd_generation_v",&pd_generation_v);
+	tree->Branch("pd_trk_score_v",&pd_trk_score_v);
+	tree->Branch("pd_trk_llr_pid_score_v",&pd_trk_llr_pid_score_v);
+	tree->Branch("pd_reco_track_count",&pd_reco_track_count);
+	tree->Branch("pd_reco_shower_count",&pd_reco_shower_count);
 
 	//--------------------//
 
@@ -500,7 +541,14 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// WC Generic neutrino selection
 
+	Float_t         single_photon_numu_score;
+	Float_t         single_photon_other_score;
+	Float_t         single_photon_ncpi0_score;
+	Float_t         single_photon_nue_score;
+	int reco_Ntrack;
+	float numu_score;	
 	float nc_pio_score;	
+	float kine_pio_vtx_dis;
 	float kine_pio_energy_1;	
 	float kine_pio_theta_1;	
 	float kine_pio_phi_1;	
@@ -515,11 +563,24 @@ void mcc9_10_neutrino_selection::Loop() {
 	float reco_nuvtxZ;
 	vector<int> *kine_particle_type; // reco pdg
 	vector<float> *kine_energy_particle; // KE in MeV
+	Int_t reco_mother[500];   //[reco_Ntrack]
+	Float_t reco_startMomentum[500][4];   //[reco_Ntrack]
+	Float_t reco_startXYZT[500][4];   //[reco_Ntrack]
+	Float_t reco_endXYZT[500][4];   //[reco_Ntrack]
+	Int_t reco_pdg[500];   //[reco_Ntrack]
+	Int_t reco_id[500];   //[reco_Ntrack]
 
 	kine_particle_type = 0;
 	kine_energy_particle = 0;	
 
+	TBranch        *b_single_photon_numu_score;   //!
+	TBranch        *b_single_photon_other_score;   //!
+	TBranch        *b_single_photon_ncpi0_score;   //!
+	TBranch        *b_single_photon_nue_score;   //!
+	TBranch* b_reco_Ntrack;
+	TBranch* b_numu_score;
 	TBranch* b_nc_pio_score;
+	TBranch* b_kine_pio_vtx_dis;
 	TBranch* b_kine_pio_energy_1;
 	TBranch* b_kine_pio_theta_1;
 	TBranch* b_kine_pio_phi_1;
@@ -534,6 +595,12 @@ void mcc9_10_neutrino_selection::Loop() {
 	TBranch* b_reco_nuvtxZ;
 	TBranch* b_kine_particle_type;
 	TBranch* b_kine_energy_particle;
+	TBranch* b_reco_mother;
+	TBranch* b_reco_startMomentum;
+	TBranch* b_reco_startXYZT;
+	TBranch* b_reco_endXYZT;
+	TBranch* b_reco_pdg;
+	TBranch* b_reco_id;
 
 	Long64_t wc_nbytes = 0, wc_nb = 0;  
 	TTree* wc = nullptr;
@@ -551,9 +618,15 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		wc = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
 		wc->SetBranchAddress("nc_pio_score", &nc_pio_score, &b_nc_pio_score);
+		wc->SetBranchAddress("numu_score", &numu_score, &b_numu_score);
+		wc->SetBranchAddress("single_photon_numu_score", &single_photon_numu_score, &b_single_photon_numu_score);
+		wc->SetBranchAddress("single_photon_other_score", &single_photon_other_score, &b_single_photon_other_score);
+		wc->SetBranchAddress("single_photon_ncpi0_score", &single_photon_ncpi0_score, &b_single_photon_ncpi0_score);
+		wc->SetBranchAddress("single_photon_nue_score", &single_photon_nue_score, &b_single_photon_nue_score);
 
 		wc_kine = (TTree*)(f_file->Get("wcpselection/T_KINEvars"));
 		wc_kine->SetBranchAddress("kine_pio_flag", &kine_pio_flag, &b_kine_pio_flag);	
+		wc_kine->SetBranchAddress("kine_pio_vtx_dis", &kine_pio_vtx_dis, &b_kine_pio_vtx_dis);
 		wc_kine->SetBranchAddress("kine_pio_energy_1", &kine_pio_energy_1, &b_kine_pio_energy_1);
 		wc_kine->SetBranchAddress("kine_pio_theta_1", &kine_pio_theta_1, &b_kine_pio_theta_1);
 		wc_kine->SetBranchAddress("kine_pio_phi_1", &kine_pio_phi_1, &b_kine_pio_phi_1);
@@ -571,6 +644,14 @@ void mcc9_10_neutrino_selection::Loop() {
 		wc_pfeval->SetBranchAddress("reco_nuvtxX", &reco_nuvtxX, &b_reco_nuvtxX);	
 		wc_pfeval->SetBranchAddress("reco_nuvtxY", &reco_nuvtxY, &b_reco_nuvtxY);	
 		wc_pfeval->SetBranchAddress("reco_nuvtxZ", &reco_nuvtxZ, &b_reco_nuvtxZ);	
+
+		wc_pfeval->SetBranchAddress("reco_Ntrack", &reco_Ntrack, &b_reco_Ntrack);
+		wc_pfeval->SetBranchAddress("reco_mother", &reco_mother, &b_reco_mother);	
+		wc_pfeval->SetBranchAddress("reco_startMomentum", &reco_startMomentum, &b_reco_startMomentum);	
+		wc_pfeval->SetBranchAddress("reco_startXYZT", &reco_startXYZT, &b_reco_startXYZT);	
+		wc_pfeval->SetBranchAddress("reco_endXYZT", &reco_endXYZT, &b_reco_endXYZT);	
+		wc_pfeval->SetBranchAddress("reco_pdg", &reco_pdg, &b_reco_pdg);
+		wc_pfeval->SetBranchAddress("reco_id", &reco_id, &b_reco_id);
 
 	}
 
@@ -685,7 +766,6 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_x.clear();
 		Blip_y.clear();
 		Blip_z.clear();
-		Blip_size.clear();
 		Blip_energy.clear();
 		Blip_charge.clear();
 		Blip_nplanes.clear();
@@ -693,16 +773,12 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_proxtrkid.clear();
 		Blip_touchtrk.clear();
 		Blip_touchtrkid.clear();
-		Blip_badwirefrac.clear();
 		Blip_pl0_nwires.clear();
 		Blip_pl1_nwires.clear();
 		Blip_pl2_nwires.clear();
 		Blip_pl0_bydeadwire.clear();
 		Blip_pl1_bydeadwire.clear();
 		Blip_pl2_bydeadwire.clear();
-		Blip_pl0_centerwire.clear();
-		Blip_pl1_centerwire.clear();
-		Blip_pl2_centerwire.clear();
 		Blip_true_g4id.clear();
 		Blip_true_energy.clear();		
 
@@ -712,6 +788,20 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		wc_kine_particle_type.clear();
 		wc_kine_energy_particle.clear();
+		wc_reco_pdg.clear();
+		wc_reco_id.clear();
+		wc_reco_mother.clear();
+		wc_reco_p.clear();
+		wc_reco_start.clear();
+		wc_reco_end.clear();
+
+		//--------------------//
+
+		// Pandora info
+
+		pd_generation_v.clear();
+		pd_trk_score_v.clear();
+		pd_trk_llr_pid_score_v.clear();
 
 		//--------------------//
 
@@ -721,33 +811,7 @@ void mcc9_10_neutrino_selection::Loop() {
 		if (kine_pio_energy_2 <= 0) { continue; }
 		if (match_isFC != 1) { continue; }
 
-		// ---------------------------------------------------------------------------------------------------------------------------------
-
-		// Start filling the TTree with events of interest
-
-		if (fSample.Contains("unified")) {
-			
-			wc_nc_pio_score = nc_pio_score;	
-			wc_kine_pio_energy_1 = kine_pio_energy_1;	
-			wc_kine_pio_theta_1 = kine_pio_theta_1;
-			wc_kine_pio_phi_1 = kine_pio_phi_1;	
-			wc_kine_pio_energy_2 = kine_pio_energy_2;	
-			wc_kine_pio_theta_2 = kine_pio_theta_2;	
-			wc_kine_pio_phi_2 = kine_pio_phi_2;
-			wc_match_isFC = match_isFC;			 
-		
-		} else { 
-
-			wc_nc_pio_score = 1;	
-			wc_kine_pio_energy_1 = 1;
-			wc_kine_pio_theta_1 = 1;
-			wc_kine_pio_phi_1 = 1;	
-			wc_kine_pio_energy_2 = 1;	
-			wc_kine_pio_theta_2 = 1;
-			wc_kine_pio_phi_2 = 1;	
-			wc_match_isFC = 1;			
-		
-		}
+		//--------------------//
 
 		Run = run;
 		SubRun = sub;
@@ -764,7 +828,21 @@ void mcc9_10_neutrino_selection::Loop() {
 		fcrthitpe = crthitpe;
 
 		wc_kine_pio_flag = kine_pio_flag;
+		wc_numu_score = numu_score;
 		wc_nc_pio_score = nc_pio_score;
+		wc_kine_pio_vtx_dis = kine_pio_vtx_dis;
+		wc_kine_pio_energy_1 = kine_pio_energy_1;	
+		wc_kine_pio_theta_1 = kine_pio_theta_1;
+		wc_kine_pio_phi_1 = kine_pio_phi_1;	
+		wc_kine_pio_energy_2 = kine_pio_energy_2;	
+		wc_kine_pio_theta_2 = kine_pio_theta_2;	
+		wc_kine_pio_phi_2 = kine_pio_phi_2;
+		wc_match_isFC = match_isFC;	
+		
+		wc_single_photon_numu_score = single_photon_numu_score;
+		wc_single_photon_other_score = single_photon_other_score;
+		wc_single_photon_ncpi0_score = single_photon_ncpi0_score;
+		wc_single_photon_nue_score = single_photon_nue_score;
 
 		//--------------------//
 
@@ -777,6 +855,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		Vertex_X.push_back(reco_nuvtxX);
 		Vertex_Y.push_back(reco_nuvtxY);
 		Vertex_Z.push_back(reco_nuvtxZ);
+
+		MCParticle_Mode = interaction;
 
 		//--------------------//
 
@@ -794,7 +874,7 @@ void mcc9_10_neutrino_selection::Loop() {
 						  Egamma1*TMath::Sin(kine_pio_theta_1/180.*3.1415926)*TMath::Sin(kine_pio_phi_1/180.*3.1415926),\
 						  Egamma1*TMath::Cos(kine_pio_theta_1/180.*3.1415926), Egamma1);
 
-		reco_g1_p.push_back(g1.Rho());			
+		reco_g1_p.push_back(g1.Rho()/1e3);	// GeV		
 		reco_g1_phi.push_back(g1.Phi()); // rad
 		reco_g1_costheta.push_back(g1.CosTheta());		
 
@@ -814,7 +894,7 @@ void mcc9_10_neutrino_selection::Loop() {
 						  Egamma2*TMath::Sin(kine_pio_theta_2/180.*3.1415926)*TMath::Sin(kine_pio_phi_2/180.*3.1415926),\
 						  Egamma2*TMath::Cos(kine_pio_theta_2/180.*3.1415926), Egamma2);
 
-		reco_g2_p.push_back(g2.Rho());			
+		reco_g2_p.push_back(g2.Rho()/1e3); // GeV			
 		reco_g2_phi.push_back(g2.Phi()); // rad
 		reco_g2_costheta.push_back(g2.CosTheta());		
 
@@ -839,8 +919,25 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// WC primary and non-primary pfparticles
 
-		wc_kine_particle_type = *kine_particle_type;
-		wc_kine_energy_particle = *kine_energy_particle;
+		wc_reco_p.resize(reco_Ntrack);
+		wc_reco_start.resize(reco_Ntrack);
+		wc_reco_end.resize(reco_Ntrack);
+
+		for (int i = 0; i < reco_Ntrack; i++) {
+
+			wc_reco_mother.push_back(reco_mother[i]);
+			wc_reco_pdg.push_back(reco_pdg[i]);
+			wc_reco_id.push_back(reco_id[i]);
+
+			for (int j = 0; j < 4; j++) {
+
+				wc_reco_p.at(i).push_back( reco_startMomentum[i][j] ); // GeV
+				wc_reco_start.at(i).push_back( reco_startXYZT[i][j] );
+				wc_reco_end.at(i).push_back( reco_endXYZT[i][j] );
+
+			}
+
+		}
 
 		//--------------------//
 
@@ -945,7 +1042,10 @@ void mcc9_10_neutrino_selection::Loop() {
 					}
 
 					else if ( fabs(MCParticlePdg) == KaonPdg || fabs(MCParticlePdg) == NeutralKaonPdg 
-						|| fabs(MCParticlePdg) == rho_pdg || fabs(MCParticlePdg) == charged_rho_pdg || fabs(MCParticlePdg) == eta_pdg)  {
+					    || fabs(MCParticlePdg) == NeutralKaonLongPdg || fabs(MCParticlePdg) == NeutralKaonShortPdg 
+						|| fabs(MCParticlePdg) == rho_pdg || fabs(MCParticlePdg) == charged_rho_pdg 
+						|| fabs(MCParticlePdg) == d0_pdg || fabs(MCParticlePdg) == dp_pdg || fabs(MCParticlePdg) == dm_pdg
+						|| fabs(MCParticlePdg) == eta_pdg || fabs(MCParticlePdg) == omega_pdg)  {
 
 						heavy_meason_tagging ++;
 			
@@ -1046,7 +1146,6 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_x = *blip_x;
 		Blip_y = *blip_y ;
 		Blip_z = *blip_z;
-		Blip_size = *blip_size;
 		Blip_energy = *blip_energy;
 		Blip_charge = *blip_charge;
 		Blip_nplanes = *blip_nplanes;
@@ -1054,18 +1153,44 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_proxtrkid = *blip_proxtrkid;
 		Blip_touchtrk = *blip_touchtrk;
 		Blip_touchtrkid = *blip_touchtrkid;
-		Blip_badwirefrac = *blip_badwirefrac;
 		Blip_pl0_nwires = *blip_pl0_nwires;
 		Blip_pl1_nwires = *blip_pl1_nwires;
 		Blip_pl2_nwires = *blip_pl2_nwires;
 		Blip_pl0_bydeadwire = *blip_pl0_bydeadwire;
 		Blip_pl1_bydeadwire = *blip_pl1_bydeadwire;
 		Blip_pl2_bydeadwire = *blip_pl2_bydeadwire;
-		Blip_pl0_centerwire = *blip_pl0_centerwire;
-		Blip_pl1_centerwire = *blip_pl1_centerwire;
-		Blip_pl2_centerwire = *blip_pl2_centerwire;
 		Blip_true_g4id = *blip_true_g4id;
-		Blip_true_energy = *blip_true_energy;			
+		Blip_true_energy = *blip_true_energy;	
+
+		//--------------------//
+
+		//Pandora info
+		
+		pd_trk_score_v = *trk_score_v;
+		pd_generation_v = *pfp_generation_v;
+		pd_trk_llr_pid_score_v = *trk_llr_pid_score_v;
+
+		int reco_shower_count = 0;
+		int reco_track_count = 0;
+
+		for ( int p = 0; p < n_pfps; ++p ) {
+
+			// Only check direct neutrino daughters (generation == 2)
+
+ 			unsigned int generation = pfp_generation_v->at( p );
+			if ( generation != 2u ) continue;
+
+			float tscore = trk_score_v->at( p );
+			if ( tscore <= TRACK_SCORE_CUT ) { ++reco_shower_count; }
+			else { ++reco_track_count; }
+  
+		}
+
+		pd_reco_track_count = reco_track_count;
+		pd_reco_shower_count = reco_shower_count;
+
+		if (pd_reco_track_count > 0) { continue; }
+		//if (pd_reco_shower_count < 1) { continue; }
 
 		//--------------------//
 

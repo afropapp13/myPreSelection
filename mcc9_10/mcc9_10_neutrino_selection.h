@@ -240,7 +240,6 @@ static constexpr Int_t kMaxweights = 4;
    vector<float>   *blip_x;
    vector<float>   *blip_y;
    vector<float>   *blip_z;
-   vector<float>   *blip_size;
    vector<float>   *blip_energy;
    vector<float>   *blip_charge;
    vector<int>     *blip_nplanes;
@@ -248,16 +247,12 @@ static constexpr Int_t kMaxweights = 4;
    vector<int>     *blip_proxtrkid;
    vector<bool>    *blip_touchtrk;
    vector<int>     *blip_touchtrkid;
-   vector<float>   *blip_badwirefrac;
    vector<int>     *blip_pl0_nwires;
    vector<int>     *blip_pl1_nwires;
    vector<int>     *blip_pl2_nwires;
    vector<bool>    *blip_pl0_bydeadwire;
    vector<bool>    *blip_pl1_bydeadwire;
    vector<bool>    *blip_pl2_bydeadwire;
-   vector<int>     *blip_pl0_centerwire;
-   vector<int>     *blip_pl1_centerwire;
-   vector<int>     *blip_pl2_centerwire;
    vector<int>     *blip_true_g4id;
    vector<float>   *blip_true_energy;
    Float_t         dvtx;
@@ -1082,7 +1077,6 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_blip_x;   //!
    TBranch        *b_blip_y;   //!
    TBranch        *b_blip_z;   //!
-   TBranch        *b_blip_size;   //!
    TBranch        *b_blip_energy;   //!
    TBranch        *b_blip_charge;   //!
    TBranch        *b_blip_nplanes;   //!
@@ -1090,16 +1084,12 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_blip_proxtrkid;   //!
    TBranch        *b_blip_touchtrk;   //!
    TBranch        *b_blip_touchtrkid;   //!
-   TBranch        *b_blip_badwirefrac;   //!
    TBranch        *b_blip_pl0_nwires;   //!
    TBranch        *b_blip_pl1_nwires;   //!
    TBranch        *b_blip_pl2_nwires;   //!
    TBranch        *b_blip_pl0_bydeadwire;   //!
    TBranch        *b_blip_pl1_bydeadwire;   //!
    TBranch        *b_blip_pl2_bydeadwire;   //!
-   TBranch        *b_blip_pl0_centerwire;   //!
-   TBranch        *b_blip_pl1_centerwire;   //!
-   TBranch        *b_blip_pl2_centerwire;   //!
    TBranch        *b_blip_true_g4id;   //!
    TBranch        *b_blip_true_energy;   //!
    TBranch        *b_dvtx;   //!
@@ -1775,7 +1765,6 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    blip_x = 0;
    blip_y = 0;
    blip_z = 0;
-   blip_size = 0;
    blip_energy = 0;
    blip_charge = 0;
    blip_nplanes = 0;
@@ -1783,16 +1772,12 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    blip_proxtrkid = 0;
    blip_touchtrk = 0;
    blip_touchtrkid = 0;
-   blip_badwirefrac = 0;
    blip_pl0_nwires = 0;
    blip_pl1_nwires = 0;
    blip_pl2_nwires = 0;
    blip_pl0_bydeadwire = 0;
    blip_pl1_bydeadwire = 0;
    blip_pl2_bydeadwire = 0;
-   blip_pl0_centerwire = 0;
-   blip_pl1_centerwire = 0;
-   blip_pl2_centerwire = 0;
    blip_true_g4id = 0;
    blip_true_energy = 0;
    dtrk_x_boundary = 0;
@@ -2264,7 +2249,6 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("blip_x", &blip_x, &b_blip_x);
    fChain->SetBranchAddress("blip_y", &blip_y, &b_blip_y);
    fChain->SetBranchAddress("blip_z", &blip_z, &b_blip_z);
-   fChain->SetBranchAddress("blip_size", &blip_size, &b_blip_size);
    fChain->SetBranchAddress("blip_energy", &blip_energy, &b_blip_energy);
    fChain->SetBranchAddress("blip_charge", &blip_charge, &b_blip_charge);
    fChain->SetBranchAddress("blip_nplanes", &blip_nplanes, &b_blip_nplanes);
@@ -2272,16 +2256,12 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("blip_proxtrkid", &blip_proxtrkid, &b_blip_proxtrkid);
    fChain->SetBranchAddress("blip_touchtrk", &blip_touchtrk, &b_blip_touchtrk);
    fChain->SetBranchAddress("blip_touchtrkid", &blip_touchtrkid, &b_blip_touchtrkid);
-   fChain->SetBranchAddress("blip_badwirefrac", &blip_badwirefrac, &b_blip_badwirefrac);
    fChain->SetBranchAddress("blip_pl0_nwires", &blip_pl0_nwires, &b_blip_pl0_nwires);
    fChain->SetBranchAddress("blip_pl1_nwires", &blip_pl1_nwires, &b_blip_pl1_nwires);
    fChain->SetBranchAddress("blip_pl2_nwires", &blip_pl2_nwires, &b_blip_pl2_nwires);
    fChain->SetBranchAddress("blip_pl0_bydeadwire", &blip_pl0_bydeadwire, &b_blip_pl0_bydeadwire);
    fChain->SetBranchAddress("blip_pl1_bydeadwire", &blip_pl1_bydeadwire, &b_blip_pl1_bydeadwire);
    fChain->SetBranchAddress("blip_pl2_bydeadwire", &blip_pl2_bydeadwire, &b_blip_pl2_bydeadwire);
-   fChain->SetBranchAddress("blip_pl0_centerwire", &blip_pl0_centerwire, &b_blip_pl0_centerwire);
-   fChain->SetBranchAddress("blip_pl1_centerwire", &blip_pl1_centerwire, &b_blip_pl1_centerwire);
-   fChain->SetBranchAddress("blip_pl2_centerwire", &blip_pl2_centerwire, &b_blip_pl2_centerwire);
    fChain->SetBranchAddress("blip_true_g4id", &blip_true_g4id, &b_blip_true_g4id);
    fChain->SetBranchAddress("blip_true_energy", &blip_true_energy, &b_blip_true_energy);
    fChain->SetBranchAddress("dvtx", &dvtx, &b_dvtx);
