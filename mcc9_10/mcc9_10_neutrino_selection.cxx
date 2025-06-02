@@ -135,9 +135,11 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_shower_opening_angle;
 	std::vector<double> reco_alpha;
 
+	std::vector<double> reco_pi0_p_gammas;
 	std::vector<double> reco_pi0_p;
 	std::vector<double> reco_pi0_phi; // rad
 	std::vector<double> reco_pi0_costheta;
+	std::vector<double> reco_pi0_invmass;	
 
 	//--------------------//
 
@@ -295,9 +297,11 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	tree->Branch("reco_alpha",&reco_alpha);	
 	tree->Branch("reco_shower_opening_angle",&reco_shower_opening_angle);	
+	tree->Branch("reco_pi0_p_gammas",&reco_pi0_p_gammas);
 	tree->Branch("reco_pi0_p",&reco_pi0_p);	
 	tree->Branch("reco_pi0_phi",&reco_pi0_phi);
-	tree->Branch("reco_pi0_costheta",&reco_pi0_costheta);	
+	tree->Branch("reco_pi0_costheta",&reco_pi0_costheta);
+	tree->Branch("reco_pi0_invmass",&reco_pi0_invmass);		
 
 	//--------------------//
 
@@ -739,9 +743,11 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		reco_alpha.clear();
 		reco_shower_opening_angle.clear();
+		reco_pi0_p_gammas.clear();	
 		reco_pi0_p.clear();	
 		reco_pi0_phi.clear();
 		reco_pi0_costheta.clear();	
+		reco_pi0_invmass.clear();			
 
 		//--------------------//
 
@@ -907,11 +913,13 @@ void mcc9_10_neutrino_selection::Loop() {
 		reco_alpha.push_back( alpha );
 
 		double pio_p = pi0_mass_gev * TMath::Sqrt( 2./(1-alpha*alpha) / (1-cos(kine_pio_angle/180.*3.1415926)) -1);
-		reco_pi0_p.push_back(pio_p);	
+		reco_pi0_p.push_back(pio_p); // GeV
 		
 		TLorentzVector pio = g1 + g2;
 		reco_pi0_phi.push_back(pio.Phi()); // rad
 		reco_pi0_costheta.push_back(pio.CosTheta());
+		reco_pi0_invmass.push_back(pio.Mag()/1e3); // GeV
+		reco_pi0_p_gammas.push_back(pio.Rho()/1e3);	//GeV
 		
 		if ( pio.CosTheta() <  pi0_costheta_thres) { continue; }
 
@@ -932,8 +940,8 @@ void mcc9_10_neutrino_selection::Loop() {
 			for (int j = 0; j < 4; j++) {
 
 				wc_reco_p.at(i).push_back( reco_startMomentum[i][j] ); // GeV
-				wc_reco_start.at(i).push_back( reco_startXYZT[i][j] );
-				wc_reco_end.at(i).push_back( reco_endXYZT[i][j] );
+				wc_reco_start.at(i).push_back( reco_startXYZT[i][j] ); // cm
+				wc_reco_end.at(i).push_back( reco_endXYZT[i][j] ); // cm
 
 			}
 
