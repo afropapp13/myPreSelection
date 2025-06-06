@@ -419,9 +419,9 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 			// MC truth information for the final-state primary particles
 
-			// NC events, any neutrino flavor	
+			// NC events, only muon neutrinos
 
-			if (ccnc == 1) {
+			if (ccnc == 1  && nu_pdg == NuMuPdg) {
 
 				TVector3 MCParticle(mc_px->at(i_mc),mc_py->at(i_mc),mc_pz->at(i_mc));
 				double MCParticleMomentum = MCParticle.Mag();
