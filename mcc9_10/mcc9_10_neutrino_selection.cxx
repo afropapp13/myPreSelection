@@ -976,7 +976,7 @@ void mcc9_10_neutrino_selection::Loop() {
 					
 					else if ( fabs(MCParticlePdg) > 1000000000)  {
 
-						cluster_tagging ++;
+						//cluster_tagging ++;
 			
 					}					
 
