@@ -1316,7 +1316,7 @@ void mcc9_10_neutrino_selection::Loop() {
 		reco_pi0_invmass.push_back(pio.Mag()/1e3); // GeV
 		reco_pi0_p_gammas.push_back(pio.Rho()/1e3);	//GeV
 
-		double cos_theta_cm = TMath::Abs(Egamma1*0.001-Egamma2*0.001)/TMath::Abs(pio_p);
+		double cos_theta_cm = (Egamma1*0.001-Egamma2*0.001)/TMath::Abs(pio.Rho()/1e3);
 		reco_cm_costheta.push_back(cos_theta_cm);		
 		
 		if ( pio.CosTheta() <  pi0_costheta_thres) { continue; }
