@@ -173,6 +173,13 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_g1_p;
 	std::vector<double> reco_g1_phi; // rad
 	std::vector<double> reco_g1_costheta;
+	double g1_start_x;
+	double g1_start_y;
+	double g1_start_z;	
+	
+	double g1_end_x;
+	double g1_end_y;
+	double g1_end_z;	
 
 	//--------------------//
 
@@ -181,6 +188,15 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_g2_p;
 	std::vector<double> reco_g2_phi; // rad
 	std::vector<double> reco_g2_costheta;
+	double g2_start_x;
+	double g2_start_y;
+	double g2_start_z;	
+
+	double g2_end_x;
+	double g2_end_y;
+	double g2_end_z;	
+
+	double two_shower_start_dist;
 	
 	//--------------------//
 
@@ -361,7 +377,13 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	tree->Branch("reco_g1_p",&reco_g1_p);	
 	tree->Branch("reco_g1_phi",&reco_g1_phi);
-	tree->Branch("reco_g1_costheta",&reco_g1_costheta);	
+	tree->Branch("reco_g1_costheta",&reco_g1_costheta);
+	tree->Branch("g1_start_x",&g1_start_x);
+	tree->Branch("g1_start_y",&g1_start_y);			
+	tree->Branch("g1_start_z",&g1_start_z);
+	tree->Branch("g1_end_x",&g1_end_x);
+	tree->Branch("g1_end_y",&g1_end_y);			
+	tree->Branch("g1_end_z",&g1_end_z);	
 
 	//--------------------//
 
@@ -370,6 +392,14 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("reco_g2_p",&reco_g2_p);	
 	tree->Branch("reco_g2_phi",&reco_g2_phi);
 	tree->Branch("reco_g2_costheta",&reco_g2_costheta);	
+	tree->Branch("g2_start_x",&g2_start_x);
+	tree->Branch("g2_start_y",&g2_start_y);			
+	tree->Branch("g2_start_z",&g2_start_z);
+	tree->Branch("g2_end_x",&g2_end_x);
+	tree->Branch("g2_end_y",&g2_end_y);			
+	tree->Branch("g2_end_z",&g2_end_z);	
+
+	tree->Branch("two_shower_start_dist",&two_shower_start_dist);		
 
 	//--------------------//
 
@@ -1347,26 +1377,54 @@ void mcc9_10_neutrino_selection::Loop() {
 			}
 
 			// do the pfeval-to-gamma matching
+			// only primaries and photons
 
-			if ( TMath::Abs(kine_pio_energy_1*0.001 - reco_startMomentum[i][3])/(kine_pio_energy_1*0.001) < 0.05 ) { 
+			if (reco_pdg[i] == 11) {
+
+				//cout << "kine_pio_energy_1*0.001 = " << kine_pio_energy_1*0.001 << "  kine_pio_energy_2*0.001 = " << kine_pio_energy_2*0.001 << "  reco_startMomentum[i][3] = " << reco_startMomentum[i][3] << endl; 
+
+				if ( TMath::Abs(kine_pio_energy_1*0.001 - reco_startMomentum[i][3])/(kine_pio_energy_1*0.001) < 0.02 ) { 
+					
+					temp_g1_id = i; 
+					wc_reco_g1_id = i; 				
 				
-				temp_g1_id = i; 
-				wc_reco_g1_id = i; 				
+				}
+
+				if ( TMath::Abs(kine_pio_energy_2*0.001 - reco_startMomentum[i][3])/(kine_pio_energy_2*0.001) < 0.02 ) { 
+					
+					temp_g2_id = i; 
+					wc_reco_g2_id = i; 				
+				
+				}	
 			
 			}
 
-			if ( TMath::Abs(kine_pio_energy_2*0.001 - reco_startMomentum[i][3])/(kine_pio_energy_2*0.001) < 0.01 ) { 
-				
-				temp_g2_id = i; 
-				wc_reco_g2_id = i; 				
-			
-			}			
-
-		}
+		}		
 
 		// make sure that the pfeval-to-gamma matching is done correctly
-		//if (temp_g1_id == -1) { cout << "unmatched g1" << endl; }
-		//if (temp_g2_id == -1) { cout << "unmatched g2" << endl; }		
+		if (temp_g1_id == -1) { continue; }
+		if (temp_g2_id == -1) { continue; }		
+
+		g1_start_x = reco_startXYZT[temp_g1_id][0];
+		g1_start_y = reco_startXYZT[temp_g1_id][1];
+		g1_start_z = reco_startXYZT[temp_g1_id][2];
+		
+		g1_end_x = reco_endXYZT[temp_g1_id][0];
+		g1_end_y = reco_endXYZT[temp_g1_id][1];
+		g1_end_z = reco_endXYZT[temp_g1_id][2];		
+		
+		g2_start_x = reco_startXYZT[temp_g2_id][0];
+		g2_start_y = reco_startXYZT[temp_g2_id][1];
+		g2_start_z = reco_startXYZT[temp_g2_id][2];	
+
+		g2_end_x = reco_endXYZT[temp_g2_id][0];
+		g2_end_y = reco_endXYZT[temp_g2_id][1];
+		g2_end_z = reco_endXYZT[temp_g2_id][2];			
+		
+		TVector3 g1_start(g1_start_x,g1_start_y,g1_start_z);
+		TVector3 g2_start(g2_start_x,g2_start_y,g2_start_z);		
+
+		two_shower_start_dist = (g1_start - g2_start).Mag();		
 
 		//--------------------//
 
