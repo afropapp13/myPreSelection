@@ -42,6 +42,11 @@ void mcc9_10_neutrino_selection::Loop() {
 	Long64_t nentries = fChain->GetEntriesFast();
 	cout << "file entries = " << nentries << endl;
 	Long64_t nbytes = 0, nb = 0;
+	Long64_t wc_nbytes = 0, wc_nb = 0;  
+	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;  	
+	Long64_t wc_eval_nbytes = 0, wc_eval_nb = 0;  		
+	Long64_t wc_pfeval_nbytes = 0, wc_pfeval_nb = 0;  		
+	Long64_t wc_sp_nbytes = 0, wc_sp_nb = 0; 	
 
 	//--------------------//
 
@@ -71,6 +76,23 @@ void mcc9_10_neutrino_selection::Loop() {
 	float wc_kine_pio_phi_2;
 	bool wc_match_isFC;
 	int wc_kine_pio_flag;
+
+    // wc ntuple truth-matching variables
+	int g1_truthMatch_pdg;
+	double g1_truthMatch_p;
+	double g1_truthMatch_px;
+	double g1_truthMatch_py;
+	double g1_truthMatch_pz;
+	double g1_truthMatch_costheta;
+	double g1_truthMatch_phi; // rad		
+	
+	int g2_truthMatch_pdg;
+	double g2_truthMatch_p;
+	double g2_truthMatch_px;
+	double g2_truthMatch_py;
+	double g2_truthMatch_pz;
+	double g2_truthMatch_costheta;
+	double g2_truthMatch_phi; // rad		
 
 	vector<double>  trecchargeblob_spacepoints_x;
 	vector<double>  trecchargeblob_spacepoints_y;
@@ -145,6 +167,20 @@ void mcc9_10_neutrino_selection::Loop() {
 	float fCosmicDirAll3D;
 	int fcrtveto;
 	float fcrthitpe;
+
+	int wc_reco_g1_id;
+	int wc_reco_g2_id;	
+
+	//--------------------//
+
+	// wc reco info
+
+	std::vector<int> wc_reco_mother;
+	std::vector< std::vector<float> > wc_reco_p;
+	std::vector< std::vector<float> > wc_reco_start;
+	std::vector< std::vector<float> > wc_reco_end;
+	std::vector<int> wc_reco_pdg;
+	std::vector<int> wc_reco_id;	
 
 	//--------------------//
 
@@ -338,19 +374,8 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// wc pfparticles
 
-	int wc_reco_g1_id;
-	int wc_reco_g2_id;	
-
-	std::vector<int> wc_reco_mother;
-	std::vector< std::vector<float> > wc_reco_p;
-	std::vector< std::vector<float> > wc_reco_start;
-	std::vector< std::vector<float> > wc_reco_end;
-	std::vector<int> wc_reco_pdg;
-	std::vector<int> wc_reco_id;
-
 	tree->Branch("wc_reco_g1_id",&wc_reco_g1_id);
 	tree->Branch("wc_reco_g2_id",&wc_reco_g2_id);	
-
 	tree->Branch("wc_reco_mother",&wc_reco_mother);
 	tree->Branch("wc_reco_p",&wc_reco_p);
 	tree->Branch("wc_reco_start",&wc_reco_start);
@@ -399,7 +424,25 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("g2_end_y",&g2_end_y);			
 	tree->Branch("g2_end_z",&g2_end_z);	
 
-	tree->Branch("two_shower_start_dist",&two_shower_start_dist);		
+	tree->Branch("two_shower_start_dist",&two_shower_start_dist);	
+	
+	//--------------------//
+
+	tree->Branch("g1_truthMatch_pdg",&g1_truthMatch_pdg);
+	tree->Branch("g1_truthMatch_p",&g1_truthMatch_p);
+	tree->Branch("g1_truthMatch_px",&g1_truthMatch_px);
+	tree->Branch("g1_truthMatch_py",&g1_truthMatch_py);
+	tree->Branch("g1_truthMatch_pz",&g1_truthMatch_pz);
+	tree->Branch("g1_truthMatch_costheta",&g1_truthMatch_costheta);
+	tree->Branch("g1_truthMatch_phi",&g1_truthMatch_phi);					
+	
+	tree->Branch("g2_truthMatch_pdg",&g2_truthMatch_pdg);
+	tree->Branch("g2_truthMatch_p",&g2_truthMatch_p);
+	tree->Branch("g2_truthMatch_px",&g2_truthMatch_px);
+	tree->Branch("g2_truthMatch_py",&g2_truthMatch_py);
+	tree->Branch("g2_truthMatch_pz",&g2_truthMatch_pz);
+	tree->Branch("g2_truthMatch_costheta",&g2_truthMatch_costheta);
+	tree->Branch("g2_truthMatch_phi",&g2_truthMatch_phi);		
 
 	//--------------------//
 
@@ -638,214 +681,73 @@ void mcc9_10_neutrino_selection::Loop() {
 	POTWeight = POTScale;	
 	ROOTinoWeight = 1.;
 
-	//--------------------//
+	wc->SetBranchAddress("nc_pio_score", &nc_pio_score, &b_nc_pio_score);
+	wc->SetBranchAddress("numu_score", &numu_score, &b_numu_score);
+	wc->SetBranchAddress("single_photon_numu_score", &single_photon_numu_score, &b_single_photon_numu_score);
+	wc->SetBranchAddress("single_photon_other_score", &single_photon_other_score, &b_single_photon_other_score);
+	wc->SetBranchAddress("single_photon_ncpi0_score", &single_photon_ncpi0_score, &b_single_photon_ncpi0_score);
+	wc->SetBranchAddress("single_photon_nue_score", &single_photon_nue_score, &b_single_photon_nue_score);
 
-	// WC Generic neutrino selection
-
-	Float_t         single_photon_numu_score;
-	Float_t         single_photon_other_score;
-	Float_t         single_photon_ncpi0_score;
-	Float_t         single_photon_nue_score;
-	int reco_Ntrack;
-	float numu_score;	
-	float nc_pio_score;	
-	float kine_pio_vtx_dis;
-	float kine_pio_energy_1;	
-	float kine_pio_theta_1;	
-	float kine_pio_phi_1;	
-	float kine_pio_energy_2;
-	float kine_pio_theta_2;
-	float kine_pio_phi_2;	
-	float kine_pio_angle;		
-	bool match_isFC;
-	int kine_pio_flag;	
-	float reco_nuvtxX;
-	float reco_nuvtxY;
-	float reco_nuvtxZ;
-	vector<int> *kine_particle_type; // reco pdg
-	vector<float> *kine_energy_particle; // KE in MeV
-	Int_t reco_mother[500];   //[reco_Ntrack]
-	Float_t reco_startMomentum[500][4];   //[reco_Ntrack]
-	Float_t reco_startXYZT[500][4];   //[reco_Ntrack]
-	Float_t reco_endXYZT[500][4];   //[reco_Ntrack]
-	Int_t reco_pdg[500];   //[reco_Ntrack]
-	Int_t reco_id[500];   //[reco_Ntrack]
-   vector<double>  *Trec_spacepoints_x;
-   vector<double>  *Trec_spacepoints_y;
-   vector<double>  *Trec_spacepoints_z;
-   vector<double>  *Trec_spacepoints_q;
-   vector<double>  *Trec_spacepoints_cluster_id;
-   vector<double>  *Trec_spacepoints_real_cluster_id;
-   vector<double>  *Trec_spacepoints_sub_cluster_id;
-   vector<double>  *Treccharge_spacepoints_x;
-   vector<double>  *Treccharge_spacepoints_y;
-   vector<double>  *Treccharge_spacepoints_z;
-   vector<double>  *Treccharge_spacepoints_q;
-   vector<double>  *Treccharge_spacepoints_cluster_id;
-   vector<double>  *Treccharge_spacepoints_real_cluster_id;
-   vector<double>  *Treccharge_spacepoints_sub_cluster_id;
-   vector<double>  *Trecchargeblob_spacepoints_x;
-   vector<double>  *Trecchargeblob_spacepoints_y;
-   vector<double>  *Trecchargeblob_spacepoints_z;
-   vector<double>  *Trecchargeblob_spacepoints_q;
-   vector<double>  *Trecchargeblob_spacepoints_cluster_id;
-   vector<double>  *Trecchargeblob_spacepoints_real_cluster_id;
-   vector<double>  *Trecchargeblob_spacepoints_sub_cluster_id;		
-
-	kine_particle_type = 0;
-	kine_energy_particle = 0;	
-	Trec_spacepoints_x = 0;
-	Trec_spacepoints_y = 0;
-	Trec_spacepoints_z = 0;
-	Trec_spacepoints_q = 0;
-	Trec_spacepoints_cluster_id = 0;
-	Trec_spacepoints_real_cluster_id = 0;
-	Trec_spacepoints_sub_cluster_id = 0;
-	Treccharge_spacepoints_x = 0;
-	Treccharge_spacepoints_y = 0;
-	Treccharge_spacepoints_z = 0;
-	Treccharge_spacepoints_q = 0;
-	Treccharge_spacepoints_cluster_id = 0;
-	Treccharge_spacepoints_real_cluster_id = 0;
-	Treccharge_spacepoints_sub_cluster_id = 0;
-	Trecchargeblob_spacepoints_x = 0;
-	Trecchargeblob_spacepoints_y = 0;
-	Trecchargeblob_spacepoints_z = 0;
-	Trecchargeblob_spacepoints_q = 0;
-	Trecchargeblob_spacepoints_cluster_id = 0;
-	Trecchargeblob_spacepoints_real_cluster_id = 0;
-	Trecchargeblob_spacepoints_sub_cluster_id = 0;	
-
-	TBranch        *b_single_photon_numu_score;   //!
-	TBranch        *b_single_photon_other_score;   //!
-	TBranch        *b_single_photon_ncpi0_score;   //!
-	TBranch        *b_single_photon_nue_score;   //!
-	TBranch* b_reco_Ntrack;
-	TBranch* b_numu_score;
-	TBranch* b_nc_pio_score;
-	TBranch* b_kine_pio_vtx_dis;
-	TBranch* b_kine_pio_energy_1;
-	TBranch* b_kine_pio_theta_1;
-	TBranch* b_kine_pio_phi_1;
-	TBranch* b_kine_pio_energy_2;
-	TBranch* b_kine_pio_theta_2;
-	TBranch* b_kine_pio_phi_2;
-	TBranch* b_kine_pio_angle;
-	TBranch* b_match_isFC;
-	TBranch* b_kine_pio_flag;
-	TBranch* b_reco_nuvtxX;
-	TBranch* b_reco_nuvtxY;
-	TBranch* b_reco_nuvtxZ;
-	TBranch* b_kine_particle_type;
-	TBranch* b_kine_energy_particle;
-	TBranch* b_reco_mother;
-	TBranch* b_reco_startMomentum;
-	TBranch* b_reco_startXYZT;
-	TBranch* b_reco_endXYZT;
-	TBranch* b_reco_pdg;
-	TBranch* b_reco_id;
-	TBranch        *b_Trec_spacepoints_x;   //!
-	TBranch        *b_Trec_spacepoints_y;   //!
-	TBranch        *b_Trec_spacepoints_z;   //!
-	TBranch        *b_Trec_spacepoints_q;   //!
-	TBranch        *b_Trec_spacepoints_cluster_id;   //!
-	TBranch        *b_Trec_spacepoints_real_cluster_id;   //!
-	TBranch        *b_Trec_spacepoints_sub_cluster_id;   //!
-	TBranch        *b_Treccharge_spacepoints_x;   //!
-	TBranch        *b_Treccharge_spacepoints_y;   //!
-	TBranch        *b_Treccharge_spacepoints_z;   //!
-	TBranch        *b_Treccharge_spacepoints_q;   //!
-	TBranch        *b_Treccharge_spacepoints_cluster_id;   //!
-	TBranch        *b_Treccharge_spacepoints_real_cluster_id;   //!
-	TBranch        *b_Treccharge_spacepoints_sub_cluster_id;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_x;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_y;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_z;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_q;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_cluster_id;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_real_cluster_id;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_sub_cluster_id;   //!		
-
-	Long64_t wc_nbytes = 0, wc_nb = 0;  
-	TTree* wc = nullptr;
-
-	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;  	
-	TTree* wc_kine = nullptr;	
-
-	Long64_t wc_eval_nbytes = 0, wc_eval_nb = 0;  	
-	TTree* wc_eval = nullptr;	
-
-	Long64_t wc_pfeval_nbytes = 0, wc_pfeval_nb = 0;  	
-	TTree* wc_pfeval = nullptr;	
-
-	Long64_t wc_sp_nbytes = 0, wc_sp_nb = 0;  	
-	TTree* wc_sp = nullptr;		
-
-	if (fSample.Contains("unified")) {
-
-		wc = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
-		wc->SetBranchAddress("nc_pio_score", &nc_pio_score, &b_nc_pio_score);
-		wc->SetBranchAddress("numu_score", &numu_score, &b_numu_score);
-		wc->SetBranchAddress("single_photon_numu_score", &single_photon_numu_score, &b_single_photon_numu_score);
-		wc->SetBranchAddress("single_photon_other_score", &single_photon_other_score, &b_single_photon_other_score);
-		wc->SetBranchAddress("single_photon_ncpi0_score", &single_photon_ncpi0_score, &b_single_photon_ncpi0_score);
-		wc->SetBranchAddress("single_photon_nue_score", &single_photon_nue_score, &b_single_photon_nue_score);
-
-		wc_kine = (TTree*)(f_file->Get("wcpselection/T_KINEvars"));
-		wc_kine->SetBranchAddress("kine_pio_flag", &kine_pio_flag, &b_kine_pio_flag);	
-		wc_kine->SetBranchAddress("kine_pio_vtx_dis", &kine_pio_vtx_dis, &b_kine_pio_vtx_dis);
-		wc_kine->SetBranchAddress("kine_pio_energy_1", &kine_pio_energy_1, &b_kine_pio_energy_1);
-		wc_kine->SetBranchAddress("kine_pio_theta_1", &kine_pio_theta_1, &b_kine_pio_theta_1);
-		wc_kine->SetBranchAddress("kine_pio_phi_1", &kine_pio_phi_1, &b_kine_pio_phi_1);
-		wc_kine->SetBranchAddress("kine_pio_energy_2", &kine_pio_energy_2, &b_kine_pio_energy_2);	
-		wc_kine->SetBranchAddress("kine_pio_theta_2", &kine_pio_theta_2, &b_kine_pio_theta_2);
-		wc_kine->SetBranchAddress("kine_pio_phi_2", &kine_pio_phi_2, &b_kine_pio_phi_2);
-		wc_kine->SetBranchAddress("kine_pio_angle", &kine_pio_angle, &b_kine_pio_angle);
-		wc_kine->SetBranchAddress("kine_particle_type", &kine_particle_type, &b_kine_particle_type);
-		wc_kine->SetBranchAddress("kine_energy_particle", &kine_energy_particle, &b_kine_energy_particle);
+	wc_kine->SetBranchAddress("kine_pio_flag", &kine_pio_flag, &b_kine_pio_flag);	
+	wc_kine->SetBranchAddress("kine_pio_vtx_dis", &kine_pio_vtx_dis, &b_kine_pio_vtx_dis);
+	wc_kine->SetBranchAddress("kine_pio_energy_1", &kine_pio_energy_1, &b_kine_pio_energy_1);
+	wc_kine->SetBranchAddress("kine_pio_theta_1", &kine_pio_theta_1, &b_kine_pio_theta_1);
+	wc_kine->SetBranchAddress("kine_pio_phi_1", &kine_pio_phi_1, &b_kine_pio_phi_1);
+	wc_kine->SetBranchAddress("kine_pio_energy_2", &kine_pio_energy_2, &b_kine_pio_energy_2);	
+	wc_kine->SetBranchAddress("kine_pio_theta_2", &kine_pio_theta_2, &b_kine_pio_theta_2);
+	wc_kine->SetBranchAddress("kine_pio_phi_2", &kine_pio_phi_2, &b_kine_pio_phi_2);
+	wc_kine->SetBranchAddress("kine_pio_angle", &kine_pio_angle, &b_kine_pio_angle);
+	wc_kine->SetBranchAddress("kine_particle_type", &kine_particle_type, &b_kine_particle_type);
+	wc_kine->SetBranchAddress("kine_energy_particle", &kine_energy_particle, &b_kine_energy_particle);
 		
-		wc_eval = (TTree*)(f_file->Get("wcpselection/T_eval"));
-		wc_eval->SetBranchAddress("match_isFC", &match_isFC, &b_match_isFC);	
+	wc_eval->SetBranchAddress("match_isFC", &match_isFC, &b_match_isFC);	
 		
-		wc_pfeval = (TTree*)(f_file->Get("wcpselection/T_PFeval"));
-		wc_pfeval->SetBranchAddress("reco_nuvtxX", &reco_nuvtxX, &b_reco_nuvtxX);	
-		wc_pfeval->SetBranchAddress("reco_nuvtxY", &reco_nuvtxY, &b_reco_nuvtxY);	
-		wc_pfeval->SetBranchAddress("reco_nuvtxZ", &reco_nuvtxZ, &b_reco_nuvtxZ);	
+	wc_pfeval->SetBranchAddress("reco_nuvtxX", &reco_nuvtxX, &b_reco_nuvtxX);	
+	wc_pfeval->SetBranchAddress("reco_nuvtxY", &reco_nuvtxY, &b_reco_nuvtxY);	
+	wc_pfeval->SetBranchAddress("reco_nuvtxZ", &reco_nuvtxZ, &b_reco_nuvtxZ);	
 
-		wc_pfeval->SetBranchAddress("reco_Ntrack", &reco_Ntrack, &b_reco_Ntrack);
-		wc_pfeval->SetBranchAddress("reco_mother", &reco_mother, &b_reco_mother);	
-		wc_pfeval->SetBranchAddress("reco_startMomentum", &reco_startMomentum, &b_reco_startMomentum);	
-		wc_pfeval->SetBranchAddress("reco_startXYZT", &reco_startXYZT, &b_reco_startXYZT);	
-		wc_pfeval->SetBranchAddress("reco_endXYZT", &reco_endXYZT, &b_reco_endXYZT);	
-		wc_pfeval->SetBranchAddress("reco_pdg", &reco_pdg, &b_reco_pdg);
-		wc_pfeval->SetBranchAddress("reco_id", &reco_id, &b_reco_id);
+	if (string(fLabel).find("Overlay") != std::string::npos) {
 
-		wc_sp = (TTree*)(f_file->Get("wcpselection/T_spacepoints"));	
-		wc_sp->SetBranchAddress("Trec_spacepoints_x", &Trec_spacepoints_x, &b_Trec_spacepoints_x);
-		wc_sp->SetBranchAddress("Trec_spacepoints_y", &Trec_spacepoints_y, &b_Trec_spacepoints_y);
-		wc_sp->SetBranchAddress("Trec_spacepoints_z", &Trec_spacepoints_z, &b_Trec_spacepoints_z);
-		wc_sp->SetBranchAddress("Trec_spacepoints_q", &Trec_spacepoints_q, &b_Trec_spacepoints_q);
-		wc_sp->SetBranchAddress("Trec_spacepoints_cluster_id", &Trec_spacepoints_cluster_id, &b_Trec_spacepoints_cluster_id);
-		wc_sp->SetBranchAddress("Trec_spacepoints_real_cluster_id", &Trec_spacepoints_real_cluster_id, &b_Trec_spacepoints_real_cluster_id);
-		wc_sp->SetBranchAddress("Trec_spacepoints_sub_cluster_id", &Trec_spacepoints_sub_cluster_id, &b_Trec_spacepoints_sub_cluster_id);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_x", &Treccharge_spacepoints_x, &b_Treccharge_spacepoints_x);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_y", &Treccharge_spacepoints_y, &b_Treccharge_spacepoints_y);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_z", &Treccharge_spacepoints_z, &b_Treccharge_spacepoints_z);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_q", &Treccharge_spacepoints_q, &b_Treccharge_spacepoints_q);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_cluster_id", &Treccharge_spacepoints_cluster_id, &b_Treccharge_spacepoints_cluster_id);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_real_cluster_id", &Treccharge_spacepoints_real_cluster_id, &b_Treccharge_spacepoints_real_cluster_id);
-		wc_sp->SetBranchAddress("Treccharge_spacepoints_sub_cluster_id", &Treccharge_spacepoints_sub_cluster_id, &b_Treccharge_spacepoints_sub_cluster_id);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_x", &Trecchargeblob_spacepoints_x, &b_Trecchargeblob_spacepoints_x);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_y", &Trecchargeblob_spacepoints_y, &b_Trecchargeblob_spacepoints_y);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_z", &Trecchargeblob_spacepoints_z, &b_Trecchargeblob_spacepoints_z);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_q", &Trecchargeblob_spacepoints_q, &b_Trecchargeblob_spacepoints_q);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_cluster_id", &Trecchargeblob_spacepoints_cluster_id, &b_Trecchargeblob_spacepoints_cluster_id);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_real_cluster_id", &Trecchargeblob_spacepoints_real_cluster_id, &b_Trecchargeblob_spacepoints_real_cluster_id);
-		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_sub_cluster_id", &Trecchargeblob_spacepoints_sub_cluster_id, &b_Trecchargeblob_spacepoints_sub_cluster_id);			
+		wc_pfeval->SetBranchAddress("truth_Ntrack", &truth_Ntrack, &b_truth_Ntrack);			
+		wc_pfeval->SetBranchAddress("truth_id", &truth_id, &b_truth_id);		
+		wc_pfeval->SetBranchAddress("truth_pdg", &truth_pdg, &b_truth_pdg);
+		wc_pfeval->SetBranchAddress("truth_startMomentum", truth_startMomentum, &b_truth_startMomentum);	
+		wc_pfeval->SetBranchAddress("reco_truthMatch_pdg", &reco_truthMatch_pdg, &b_reco_truthMatch_pdg);
+		wc_pfeval->SetBranchAddress("reco_truthMatch_id", &reco_truthMatch_id, &b_reco_truthMatch_id);	
 
 	}
 
-	//--------------------//
+	wc_pfeval->SetBranchAddress("reco_Ntrack", &reco_Ntrack, &b_reco_Ntrack);	
+	wc_pfeval->SetBranchAddress("reco_mother", &reco_mother, &b_reco_mother);	
+	wc_pfeval->SetBranchAddress("reco_startMomentum", &reco_startMomentum, &b_reco_startMomentum);	
+	wc_pfeval->SetBranchAddress("reco_startXYZT", &reco_startXYZT, &b_reco_startXYZT);	
+	wc_pfeval->SetBranchAddress("reco_endXYZT", &reco_endXYZT, &b_reco_endXYZT);	
+	wc_pfeval->SetBranchAddress("reco_pdg", &reco_pdg, &b_reco_pdg);
+	wc_pfeval->SetBranchAddress("reco_id", &reco_id, &b_reco_id);
+	
+	wc_sp->SetBranchAddress("Trec_spacepoints_x", &Trec_spacepoints_x, &b_Trec_spacepoints_x);
+	wc_sp->SetBranchAddress("Trec_spacepoints_y", &Trec_spacepoints_y, &b_Trec_spacepoints_y);
+	wc_sp->SetBranchAddress("Trec_spacepoints_z", &Trec_spacepoints_z, &b_Trec_spacepoints_z);
+	wc_sp->SetBranchAddress("Trec_spacepoints_q", &Trec_spacepoints_q, &b_Trec_spacepoints_q);
+	wc_sp->SetBranchAddress("Trec_spacepoints_cluster_id", &Trec_spacepoints_cluster_id, &b_Trec_spacepoints_cluster_id);
+	wc_sp->SetBranchAddress("Trec_spacepoints_real_cluster_id", &Trec_spacepoints_real_cluster_id, &b_Trec_spacepoints_real_cluster_id);
+	wc_sp->SetBranchAddress("Trec_spacepoints_sub_cluster_id", &Trec_spacepoints_sub_cluster_id, &b_Trec_spacepoints_sub_cluster_id);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_x", &Treccharge_spacepoints_x, &b_Treccharge_spacepoints_x);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_y", &Treccharge_spacepoints_y, &b_Treccharge_spacepoints_y);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_z", &Treccharge_spacepoints_z, &b_Treccharge_spacepoints_z);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_q", &Treccharge_spacepoints_q, &b_Treccharge_spacepoints_q);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_cluster_id", &Treccharge_spacepoints_cluster_id, &b_Treccharge_spacepoints_cluster_id);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_real_cluster_id", &Treccharge_spacepoints_real_cluster_id, &b_Treccharge_spacepoints_real_cluster_id);
+	wc_sp->SetBranchAddress("Treccharge_spacepoints_sub_cluster_id", &Treccharge_spacepoints_sub_cluster_id, &b_Treccharge_spacepoints_sub_cluster_id);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_x", &Trecchargeblob_spacepoints_x, &b_Trecchargeblob_spacepoints_x);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_y", &Trecchargeblob_spacepoints_y, &b_Trecchargeblob_spacepoints_y);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_z", &Trecchargeblob_spacepoints_z, &b_Trecchargeblob_spacepoints_z);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_q", &Trecchargeblob_spacepoints_q, &b_Trecchargeblob_spacepoints_q);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_cluster_id", &Trecchargeblob_spacepoints_cluster_id, &b_Trecchargeblob_spacepoints_cluster_id);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_real_cluster_id", &Trecchargeblob_spacepoints_real_cluster_id, &b_Trecchargeblob_spacepoints_real_cluster_id);
+	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_sub_cluster_id", &Trecchargeblob_spacepoints_sub_cluster_id, &b_Trecchargeblob_spacepoints_sub_cluster_id);			
+
+	//--------------------//			
 
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
 
@@ -855,31 +757,27 @@ void mcc9_10_neutrino_selection::Loop() {
 		if (ientry < 0) break;
       	nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-		if (fSample.Contains("unified")) {
+		Long64_t wc_i_entry = wc->LoadTree(jentry);
+		wc_nb = wc->GetEntry(jentry);   
+		wc_nbytes += wc_nb;	
 
-			Long64_t wc_i_entry = wc->LoadTree(jentry);
-			wc_nb = wc->GetEntry(jentry);   
-			wc_nbytes += wc_nb;	
-
-			Long64_t wc_kine_i_entry = wc_kine->LoadTree(jentry);
-			wc_kine_nb = wc_kine->GetEntry(jentry);   
-			wc_kine_nbytes += wc_kine_nb;	
+		Long64_t wc_kine_i_entry = wc_kine->LoadTree(jentry);
+		wc_kine_nb = wc_kine->GetEntry(jentry);   
+		wc_kine_nbytes += wc_kine_nb;	
 			
-			Long64_t wc_eval_i_entry = wc_eval->LoadTree(jentry);
-			wc_eval_nb = wc_eval->GetEntry(jentry);   
-			wc_eval_nbytes += wc_eval_nb;	
+		Long64_t wc_eval_i_entry = wc_eval->LoadTree(jentry);
+		wc_eval_nb = wc_eval->GetEntry(jentry);   
+		wc_eval_nbytes += wc_eval_nb;	
 
-			Long64_t wc_pfeval_i_entry = wc_pfeval->LoadTree(jentry);
-			wc_pfeval_nb = wc_pfeval->GetEntry(jentry);   
-			wc_pfeval_nbytes += wc_pfeval_nb;	
-		
-		}		
+		Long64_t wc_pfeval_i_entry = wc_pfeval->LoadTree(jentry);
+		wc_pfeval_nb = wc_pfeval->GetEntry(jentry);   
+		wc_pfeval_nbytes += wc_pfeval_nb;	
 
-		//--------------------//
+		//--------------------//			
 
 		if (jentry%1000 == 0) std::cout << jentry/1000 << " k " << std::setprecision(3) << double(jentry)/nentries*100. << " %"<< std::endl;
 
-		//----------------------------------------//
+		//--------------------//
 
 		//Truth level loop for MC
 
@@ -974,7 +872,8 @@ void mcc9_10_neutrino_selection::Loop() {
 					    || fabs(MCParticlePdg) == NeutralKaonLongPdg || fabs(MCParticlePdg) == NeutralKaonShortPdg 
 						|| fabs(MCParticlePdg) == rho_pdg || fabs(MCParticlePdg) == charged_rho_pdg 
 						|| fabs(MCParticlePdg) == d0_pdg || fabs(MCParticlePdg) == dp_pdg || fabs(MCParticlePdg) == dm_pdg
-						|| fabs(MCParticlePdg) == eta_pdg || fabs(MCParticlePdg) == omega_pdg)  {
+						|| fabs(MCParticlePdg) == eta_pdg || fabs(MCParticlePdg) == omega_pdg 
+						|| fabs(MCParticlePdg) == xi_pdg || fabs(MCParticlePdg) == xi0_pdg)  {
 
 						heavy_meson_tagging ++;
 			
@@ -1236,7 +1135,9 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		//--------------------//
 
-		// Requirement for two well-reconstructed and fully contained photons
+		// Requirement for two well-reconstructed
+		// and fully contained objects associated
+		// with neutrino vertex
 
 		if (kine_pio_energy_1 <= 0) { continue; }
 		if (kine_pio_energy_2 <= 0) { continue; }
@@ -1529,7 +1430,6 @@ void mcc9_10_neutrino_selection::Loop() {
 		pd_reco_shower_count = reco_shower_count;
 
 		if (pd_reco_track_count > 0) { continue; }
-		//if (pd_reco_shower_count < 1) { continue; }
 
 		candidate_events++;
 
@@ -1558,6 +1458,67 @@ void mcc9_10_neutrino_selection::Loop() {
 		trecchargeblob_spacepoints_z = *Trecchargeblob_spacepoints_z;
 		trecchargeblob_spacepoints_q = *Trecchargeblob_spacepoints_q;
 		trecchargeblob_spacepoints_real_cluster_id = *Trecchargeblob_spacepoints_real_cluster_id;			
+
+		//--------------------//
+
+		// wc backtracking only for mc
+
+		if (string(fLabel).find("Overlay") != std::string::npos) {
+
+			// loop over the reco objects
+			// but use only the two photon indices
+			for (int i = 0; i < reco_Ntrack; i++) {
+
+				if ( !(i == wc_reco_g1_id || i == wc_reco_g2_id) ) { continue; }
+
+				int id = reco_truthMatch_id[i];
+				int truthMatch_id = -1;
+
+				// loop over the truth objects
+				for (int t = 0; t < truth_Ntrack; t++) {
+
+					if (truth_id[t] == id) {
+
+						truthMatch_id = t;
+						break;
+
+					}
+					
+				} // end of the truth loop
+
+				if ( i == wc_reco_g1_id ) {
+
+					g1_truthMatch_pdg = truth_pdg[truthMatch_id];
+					g1_truthMatch_p = truth_startMomentum[truthMatch_id][3];
+
+					TVector3 g1_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
+					g1_truthMatch_px = g1_truthMatch_v.X();
+					g1_truthMatch_py = g1_truthMatch_v.Y();
+					g1_truthMatch_pz = g1_truthMatch_v.Z();
+					g1_truthMatch_costheta = g1_truthMatch_v.CosTheta();
+					g1_truthMatch_phi = g1_truthMatch_v.Phi(); // rad	
+
+				}
+
+				if ( i == wc_reco_g2_id ) {
+
+					g2_truthMatch_pdg = truth_pdg[truthMatch_id];
+					g2_truthMatch_p = truth_startMomentum[truthMatch_id][3];
+
+					TVector3 g2_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
+					g2_truthMatch_px = g2_truthMatch_v.X();
+					g2_truthMatch_py = g2_truthMatch_v.Y();
+					g2_truthMatch_pz = g2_truthMatch_v.Z();
+					g2_truthMatch_costheta = g2_truthMatch_v.CosTheta();
+					g2_truthMatch_phi = g2_truthMatch_v.Phi(); // rad	
+
+				}				
+
+				//cout << "reco_pdg = " << reco_pdg[i] << "  truthMatch_id = " << truthMatch_id << " truth_pdg = " << truth_pdg[truthMatch_id] << endl;
+
+			}	
+		
+		} // end of backtracking 
 
 		//--------------------//
 

@@ -1,6 +1,6 @@
 #define mcc9_10_true_neutrino_selection_cxx
 #include "mcc9_10_true_neutrino_selection.h"
-#include <TH2.h>
+#include <TH1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TVector3.h>
@@ -25,7 +25,6 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	//--------------------//
 
 	TH1D::SetDefaultSumw2();
-	TH2D::SetDefaultSumw2();
 
 	//--------------------//
 
@@ -43,7 +42,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 	//--------------------//
 
-	// TTree
+	// TTree declaration
 
 	TTree* tree = new TTree("myPreTruthSelection","myPreTruthSelection");
 
@@ -406,7 +405,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 		int fNCcoh = 0;
 		int fNCres = 0;
 
-		int ProtonTagging = 0, ChargedPionTagging = 0, Pi0Tagging = 0;
+		int proton_tagging = 0, ChargedPionTagging = 0, pi0_tagging = 0;
 		int heavy_meason_tagging = 0, SigmaTagging = 0, LambdaTagging = 0;
 		int PhotonTagging = 0, LeptonTagging = 0 , cluster_tagging = 0;
 		int neutron_tagging = 0;
@@ -435,7 +434,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 					// proton kinetic energy threshold
 					if ( ke > proton_ke_thres ) {
 
-						ProtonTagging ++;
+						proton_tagging ++;
 
 					}
 
@@ -449,7 +448,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 				else if ( fabs(MCParticlePdg) == NeutralPionPdg)  {
 
-					Pi0Tagging ++;
+					pi0_tagging ++;
 					Pi0ID.push_back(i_mc);
 
 				}
@@ -458,7 +457,8 @@ void mcc9_10_true_neutrino_selection::Loop() {
 				    || fabs(MCParticlePdg) == NeutralKaonLongPdg || fabs(MCParticlePdg) == NeutralKaonShortPdg 
 					|| fabs(MCParticlePdg) == rho_pdg || fabs(MCParticlePdg) == charged_rho_pdg 
 					|| fabs(MCParticlePdg) == d0_pdg || fabs(MCParticlePdg) == dp_pdg || fabs(MCParticlePdg) == dm_pdg
-					|| fabs(MCParticlePdg) == eta_pdg || fabs(MCParticlePdg) == omega_pdg)  {
+					|| fabs(MCParticlePdg) == eta_pdg || fabs(MCParticlePdg) == omega_pdg  
+					|| fabs(MCParticlePdg) == xi_pdg || fabs(MCParticlePdg) == xi0_pdg)  {
 
 					heavy_meason_tagging ++;
 		
@@ -489,15 +489,17 @@ void mcc9_10_true_neutrino_selection::Loop() {
 				}			
 
 				else if ( fabs(MCParticlePdg) == hydrogen_cluster_pdg || fabs(MCParticlePdg) == nucleon_pair
-					|| fabs(MCParticlePdg) == ArgonPdg || fabs(MCParticlePdg) == neutron_pair || fabs(MCParticlePdg) == proton_pair) {
+					   || fabs(MCParticlePdg) == ArgonPdg || fabs(MCParticlePdg) == neutron_pair 
+					   || fabs(MCParticlePdg) == proton_pair) {
 
-					// Ignore neutrons, numus, nues
+					// ignore 
 
 				}
 
 				else if ( fabs(MCParticlePdg) == NuMuPdg || fabs(MCParticlePdg) == nue_pdg) {
 
-					// Ignore numus, nues
+					// ignore since neutral current numu interactions
+					if (fabs(MCParticlePdg) == nue_pdg)cout << "MCParticlePdg = " << MCParticlePdg << endl;
 
 				}
 
@@ -523,12 +525,12 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 		//--------------------//
 
-		// NCCOh-like Signal events	
+		// NCCOH-like Signal events	
 
 		if (
-			Pi0Tagging == 1 && ProtonTagging == 0 && ChargedPionTagging == 0 && 
-		   heavy_meason_tagging == 0 && LambdaTagging == 0 && SigmaTagging == 0 &&
-		   PhotonTagging == 0 && LeptonTagging == 0 && cluster_tagging == 0 && neutron_tagging == 0
+			pi0_tagging == 1 && proton_tagging == 0 && ChargedPionTagging == 0 && 
+		    heavy_meason_tagging == 0 && LambdaTagging == 0 && SigmaTagging == 0 &&
+		    PhotonTagging == 0 && LeptonTagging == 0 && cluster_tagging == 0 && neutron_tagging == 0
 		) {
 			
 			fsignal = 1; 

@@ -3,3 +3,7 @@
 *.pcm
 *.d
 *.so
+*/mcc9_10_true_neutrino_selection_cxx_ACLiC_linkdef.h
+*/mcc9_10_true_neutrino_selection_cxx_ACLiC_maincxx
+*/mcc9_10_true_neutrino_selection_cxx_ACLiC_map.in
+*/mcc9_10_true_neutrino_selection_cxx_ACLiC_map.out
