@@ -14,6 +14,7 @@
 
 #include "../../../generators/constants.h"
 #include "../../../generators/Tools.h"
+#include "../../../generators/helper_functions.cxx"
 
 using namespace std;
 using namespace constants;
@@ -84,6 +85,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	int signal;
 	int NCcoh;
 	int NCres;
+	int nupdg;
 	
 	//--------------------//
 
@@ -139,6 +141,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	tree->Branch("signal",&signal);
 	tree->Branch("NCcoh",&NCcoh);
 	tree->Branch("NCres",&NCres);
+	tree->Branch("nupdg",&nupdg);	
 	
 	//--------------------//
 		
@@ -322,8 +325,6 @@ void mcc9_10_true_neutrino_selection::Loop() {
 		if (ientry < 0) break;
       	nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-		TotalCounter++;
-
 		//--------------------//
 
 		if (jentry%1000 == 0) std::cout << jentry/1000 << " k " << std::setprecision(3) << double(jentry)/nentries*100. << " %"<< std::endl;
@@ -386,6 +387,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 		SubRun = sub;
 		Event = evt;		
 
+		nupdg = nu_pdg;
 		True_Ev = nu_e;
 		True_Vx = true_nu_vtx_x;
 		True_Vy = true_nu_vtx_y;
@@ -418,9 +420,9 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 			// MC truth information for the final-state primary particles
 
-			// NC events, only muon neutrinos
+			// NC events, all neutrino flavors
 
-			if (ccnc == 1  && nu_pdg == NuMuPdg) {
+			if (ccnc == 1) {
 
 				TVector3 MCParticle(mc_px->at(i_mc),mc_py->at(i_mc),mc_pz->at(i_mc));
 				double MCParticleMomentum = MCParticle.Mag();
@@ -498,8 +500,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 				else if ( fabs(MCParticlePdg) == NuMuPdg || fabs(MCParticlePdg) == nue_pdg) {
 
-					// ignore since neutral current numu interactions
-					if (fabs(MCParticlePdg) == nue_pdg)cout << "MCParticlePdg = " << MCParticlePdg << endl;
+					//ignore, since we use all neutrino flavors
 
 				}
 
@@ -566,6 +567,8 @@ void mcc9_10_true_neutrino_selection::Loop() {
 			
 			if (pi0_TrueCosTheta < pi0_costheta_thres) { continue; }
 			
+			TotalCounter++;					
+
 			pi0_MCParticle_Mode.push_back(interaction);
 			pi0_MCParticle_Mom.push_back(pi0_TrueMomentum_GeV);
 			pi0_MCParticle_Phi.push_back(pi0_TruePhi_Deg);
@@ -578,7 +581,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 			pi0_MCParticle_EndY.push_back(pi0_TVector3TrueEnd.Y());
 			pi0_MCParticle_EndZ.push_back(pi0_TVector3TrueEnd.Z());
 			pi0_MCParticle_EndContainment.push_back(pi0_TrueEndContainment);
-			pi0_MCParticle_Pdg.push_back(mc_pdg->at(Pi0ID.at(0)));						
+			pi0_MCParticle_Pdg.push_back(mc_pdg->at(Pi0ID.at(0)));		
 			
 		}
 
@@ -599,6 +602,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	OutputFile->Write();
 	OutputFile->Close();
 	std::cout << std::endl << "File " << FileName << " has been created"<< std::endl << std::endl;
+	std::cout << std::endl << "Preselected events = " << TotalCounter << " (" << to_string_with_precision( (double)(TotalCounter) / (double)(nentries) * 100.,2) << "%)" << std::endl << std::endl;
 
 	//--------------------//
 

@@ -117,6 +117,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	int dis;
 	int coh;
 	int other;
+	int nupdg;	
 
 	// X = any other particle
 	// M >= 2
@@ -305,6 +306,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("SubRun",&SubRun);
 	tree->Branch("Event",&Event);	
 	tree->Branch("run_period",&run_period);
+	tree->Branch("nupdg",&nupdg);	
 
 	tree->Branch("signal",&signal);
 	tree->Branch("nc",&nc);
@@ -833,9 +835,9 @@ void mcc9_10_neutrino_selection::Loop() {
 
 				// MC truth information for the final-state primary particles
 
-				// NC events, only muon neutrinos
+				// NC events, all neutrino flavors
 
-				if (ccnc == 1 && nu_pdg == NuMuPdg) {
+				if (ccnc == 1) {
 
 					TVector3 MCParticle(mc_px->at(i_mc),mc_py->at(i_mc),mc_pz->at(i_mc));
 					double MCParticleMomentum = MCParticle.Mag();
@@ -1325,7 +1327,12 @@ void mcc9_10_neutrino_selection::Loop() {
 		TVector3 g1_start(g1_start_x,g1_start_y,g1_start_z);
 		TVector3 g2_start(g2_start_x,g2_start_y,g2_start_z);		
 
-		two_shower_start_dist = (g1_start - g2_start).Mag();		
+		two_shower_start_dist = (g1_start - g2_start).Mag();	
+
+		//--------------------//
+
+		wc_kine_particle_type = *kine_particle_type;
+		wc_kine_energy_particle = *kine_energy_particle;	
 
 		//--------------------//
 
@@ -1337,6 +1344,7 @@ void mcc9_10_neutrino_selection::Loop() {
 			True_Vx = true_nu_vtx_x;
 			True_Vy = true_nu_vtx_y;
 			True_Vz = true_nu_vtx_z;
+			nupdg = nu_pdg;
 
 		} else {
 
@@ -1344,6 +1352,7 @@ void mcc9_10_neutrino_selection::Loop() {
 			True_Vx = CosmicPID;
 			True_Vy = CosmicPID;
 			True_Vz = CosmicPID;
+			nupdg = CosmicPID;
 
 		}
 
