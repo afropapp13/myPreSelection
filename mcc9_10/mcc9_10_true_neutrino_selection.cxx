@@ -60,7 +60,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	int Event;
 	TString run_period;
 
-	std::vector<double> All_UBGenie;
+	std::vector<unsigned short> All_UBGenie;
 	std::vector<double> AxFFCCQEshape_UBGenie;
 	std::vector<double> DecayAngMEC_UBGenie;
 	std::vector<double> NormCCCOH_UBGenie;
@@ -73,9 +73,8 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 	//----------------------------------------//	
 
-	std::vector<double> fluxes;
-
-	std::vector<double> reinteractions;
+	std::vector<unsigned short> fluxes;
+	std::vector<unsigned short> reinteractions;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -498,41 +497,6 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 	// -----------------------------------------------------------------------------
 
-	// Only for MC CV / Dirt
-	// Need to take care of the weights for the systematics
-
-	if (string(fLabel).find("Overlay") != std::string::npos) {
-
-		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
-		fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
-
-		if ( 
-			   fLabel == "Overlay9_Run1" 
-			|| fLabel == "Overlay9_Run2" 
-			|| fLabel == "Overlay9_Run3" 
-			|| fLabel == "Overlay9_Run4a"
-			|| fLabel == "Overlay9_Run4b" 
-			|| fLabel == "Overlay9_Run4c"
-			|| fLabel == "Overlay9_Run4d" 
-			|| fLabel == "Overlay9_Run5" 
-			|| fLabel == "OverlayDirt9_Run1" 
-			|| fLabel == "OverlayDirt9_Run2" 
-			|| fLabel == "OverlayDirt9_Run3" 
-			|| fLabel == "OverlayDirt9_Run4a" 
-			|| fLabel == "OverlayDirt9_Run4b" 
-			|| fLabel == "OverlayDirt9_Run4c" 
-			|| fLabel == "OverlayDirt9_Run4d" 
-			|| fLabel == "OverlayDirt9_Run5"		 
-		) {
-
-			fChain->SetBranchAddress("weights", &weights, &b_weights);
-
-		}
-
-	}
-
-	// -----------------------------------------------------------------------------
-
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
 
 		// -----------------------------------------------------------------------------
@@ -557,47 +521,19 @@ void mcc9_10_true_neutrino_selection::Loop() {
 			T2KWeight = weightTune;
 			ROOTinoWeight = 1.;
 
-			if ( 
-				   fLabel == "Overlay9_Run1" 
-				|| fLabel == "Overlay9_Run2" 
-				|| fLabel == "Overlay9_Run3" 
-				|| fLabel == "Overlay9_Run4a" 
-				|| fLabel == "Overlay9_Run4b" 
-				|| fLabel == "Overlay9_Run4c" 
-				|| fLabel == "Overlay9_Run4d" 
-				|| fLabel == "Overlay9_Run5"
-				|| fLabel == "OverlayDirt9_Run1" 
-				|| fLabel == "OverlayDirt9_Run2" 
-				|| fLabel == "OverlayDirt9_Run3" 
-				|| fLabel == "OverlayDirt9_Run4a"
-				|| fLabel == "OverlayDirt9_Run4b" 
-				|| fLabel == "OverlayDirt9_Run5"	 
-			) {
-
-
-				for ( auto& pair : *weights ) {
-
-					if ( pair.first == "All_UBGenie") {  All_UBGenie = pair.second; }
-					else if ( pair.first == "AxFFCCQEshape_UBGenie") {  AxFFCCQEshape_UBGenie = pair.second; }
-					else if ( pair.first == "DecayAngMEC_UBGenie") {  DecayAngMEC_UBGenie = pair.second; }
-					else if ( pair.first == "NormCCCOH_UBGenie") {  NormCCCOH_UBGenie = pair.second; }
-					else if ( pair.first == "NormNCCOH_UBGenie") {  NormNCCOH_UBGenie = pair.second; }
-					else if ( pair.first == "RPA_CCQE_UBGenie") {  RPA_CCQE_UBGenie = pair.second; }
-					else if ( pair.first == "ThetaDelta2NRad_UBGenie") {  ThetaDelta2NRad_UBGenie = pair.second; }
-					else if ( pair.first == "Theta_Delta2Npi_UBGenie") {  Theta_Delta2Npi_UBGenie = pair.second; }
-					else if ( pair.first == "VecFFCCQEshape_UBGenie") {  VecFFCCQEshape_UBGenie = pair.second; }
-					else if ( pair.first == "XSecShape_CCMEC_UBGenie") {  XSecShape_CCMEC_UBGenie = pair.second; }
-
-
-					else if ( pair.first == "flux_all") {  fluxes = pair.second; }
-					else if ( pair.first == "reint_all") {  reinteractions = pair.second; }
-					else if ( pair.first == "RootinoFix_UBGenie") {  ROOTinoWeight = pair.second.at(0); }
-
-					//else {  cout << "pair.first = " << pair.first << " pair.second.size() = " << pair.second.size() << endl; }
-
-				}
-
-			}
+			reinteractions = *weightsReint;
+			fluxes = *weightsFlux;
+			All_UBGenie = *weightsGenie;
+			AxFFCCQEshape_UBGenie = {knobAxFFCCQEup, knobAxFFCCQEdn};
+			DecayAngMEC_UBGenie = {knobDecayAngMECup, knobDecayAngMECdn};
+			NormCCCOH_UBGenie = {knobNormCCCOHup,knobNormCCCOHdn};
+			NormNCCOH_UBGenie = {knobNormNCCOHup,knobNormNCCOHdn};
+			RPA_CCQE_UBGenie = {knobRPAup,knobRPAdn};
+			ThetaDelta2NRad_UBGenie = {knobThetaDelta2NRadup,knobThetaDelta2NRaddn};
+			Theta_Delta2Npi_UBGenie = {knobThetaDelta2Npiup,knobThetaDelta2Npidn};
+			VecFFCCQEshape_UBGenie = {knobVecFFCCQEup,knobVecFFCCQEdn};
+			XSecShape_CCMEC_UBGenie = {knobCCMECup,knobCCMECdn};
+			ROOTinoWeight = RootinoFix;
 
 		} else {
 

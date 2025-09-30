@@ -63,7 +63,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	int Event;
 	TString run_period;
 
-	std::vector<double> All_UBGenie;
+	std::vector<unsigned short> All_UBGenie;
 	std::vector<double> AxFFCCQEshape_UBGenie;
 	std::vector<double> DecayAngMEC_UBGenie;
 	std::vector<double> NormCCCOH_UBGenie;
@@ -76,9 +76,8 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	//----------------------------------------//
 
-	std::vector<double> fluxes; // flux variations in single weight
-
-	std::vector<double> reinteractions; // G4 weights in single weight
+	std::vector<unsigned short> fluxes;
+	std::vector<unsigned short> reinteractions;
 
 	int nue;	
 	int NC;	
@@ -122,10 +121,30 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------
 
+	// wc
+
+	std::vector<int> wc_reco_id;
+	std::vector<int> wc_reco_pdg;
+	std::vector<int> wc_reco_mother;
+	std::vector< std::vector<float> > wc_reco_p;
+	Double_t        wc_mcs_mu_tracklen;
+	Double_t        wc_mcs_emu_tracklen;	
+
+	vector<double>  trecchargeblob_spacepoints_x;
+	vector<double>  trecchargeblob_spacepoints_y;
+	vector<double>  trecchargeblob_spacepoints_z;
+	vector<double>  trecchargeblob_spacepoints_q;
+	vector<double>  trecchargeblob_spacepoints_real_cluster_id;	
+
+	// ------------------------------------------------------------------------------------------------------------------------------------------
+
 	std::vector<double> CandidateMuP_Distance;
 	std::vector<float> Vertex_X;
 	std::vector<float> Vertex_Y;
 	std::vector<float> Vertex_Z;
+	std::vector<float> wc_Vertex_X;
+	std::vector<float> wc_Vertex_Y;
+	std::vector<float> wc_Vertex_Z;	
 	std::vector<double> CandidateMuStartVertexDistance;
 	std::vector<double> CandidatePStartVertexDistance;
 	std::vector<double> CandidateMuEndVertexDistance;
@@ -277,7 +296,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	vector<float>   Blip_x;
 	vector<float>   Blip_y;
 	vector<float>   Blip_z;
-	vector<float>   Blip_size;
 	vector<float>   Blip_energy;
 	vector<float>   Blip_charge;
 	vector<int>     Blip_nplanes;
@@ -285,17 +303,14 @@ void mcc9_10_neutrino_selection::Loop() {
 	vector<int>     Blip_proxtrkid;
 	vector<bool>    Blip_touchtrk;
 	vector<int>     Blip_touchtrkid;
-	vector<float>   Blip_badwirefrac;
 	vector<int>     Blip_pl0_nwires;
 	vector<int>     Blip_pl1_nwires;
 	vector<int>     Blip_pl2_nwires;
 	vector<bool>    Blip_pl0_bydeadwire;
 	vector<bool>    Blip_pl1_bydeadwire;
 	vector<bool>    Blip_pl2_bydeadwire;
-	vector<int>     Blip_pl0_centerwire;
-	vector<int>     Blip_pl1_centerwire;
-	vector<int>     Blip_pl2_centerwire;
 	vector<int>     Blip_true_g4id;
+	vector<int>     Blip_true_pdg;
 	vector<float>   Blip_true_energy;
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------
@@ -369,12 +384,28 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("crtveto",&fcrtveto);
 	tree->Branch("crthitpe",&fcrthitpe);
 
+	tree->Branch("wc_reco_mother",&wc_reco_mother);
+	tree->Branch("wc_reco_p",&wc_reco_p);
+	tree->Branch("wc_reco_pdg",&wc_reco_pdg);
+	tree->Branch("wc_reco_id",&wc_reco_id);
+	tree->Branch("wc_mcs_mu_tracklen",&wc_mcs_mu_tracklen);
+	tree->Branch("wc_mcs_emu_tracklen",&wc_mcs_emu_tracklen);		
+
+	tree->Branch("trecchargeblob_spacepoints_x",&trecchargeblob_spacepoints_x);	
+	tree->Branch("trecchargeblob_spacepoints_y",&trecchargeblob_spacepoints_y);	
+	tree->Branch("trecchargeblob_spacepoints_z",&trecchargeblob_spacepoints_z);	
+	tree->Branch("trecchargeblob_spacepoints_q",&trecchargeblob_spacepoints_q);	
+	tree->Branch("trecchargeblob_spacepoints_real_cluster_id",&trecchargeblob_spacepoints_real_cluster_id);						
+
 	// --------------------------------------------------------------------------------------------------------------------------------------------
 
 	tree->Branch("CandidateMuP_Distance",&CandidateMuP_Distance);
 	tree->Branch("Vertex_X",&Vertex_X);
 	tree->Branch("Vertex_Y",&Vertex_Y);
-	tree->Branch("Vertex_Z",&Vertex_Z);
+	tree->Branch("Vertex_Z",&Vertex_Z);	
+	tree->Branch("wc_Vertex_X",&wc_Vertex_X);
+	tree->Branch("wc_Vertex_Y",&wc_Vertex_Y);
+	tree->Branch("wc_Vertex_Z",&wc_Vertex_Z);
 	tree->Branch("CandidateMuStartVertexDistance",&CandidateMuStartVertexDistance);
 	tree->Branch("CandidatePStartVertexDistance",&CandidatePStartVertexDistance);
 	tree->Branch("CandidateMuEndVertexDistance",&CandidateMuEndVertexDistance);
@@ -489,7 +520,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Reco_DeltaTheta",&Reco_DeltaTheta);	
 	tree->Branch("Reco_ThetaVis",&Reco_ThetaVis);	
 
-
 	tree->Branch("True_A",&True_A);
 	tree->Branch("True_kMiss",&True_kMiss);
 	tree->Branch("True_PMissMinus",&True_PMissMinus);
@@ -527,7 +557,6 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Blip_x",&Blip_x);
 	tree->Branch("Blip_y",&Blip_y);
 	tree->Branch("Blip_z",&Blip_z);
-	tree->Branch("Blip_size",&Blip_size);
 	tree->Branch("Blip_energy",&Blip_energy);
 	tree->Branch("Blip_charge",&Blip_charge);
 	tree->Branch("Blip_nplanes",&Blip_nplanes);
@@ -535,17 +564,14 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Blip_proxtrkid",&Blip_proxtrkid);
 	tree->Branch("Blip_touchtrk",&Blip_touchtrk);
 	tree->Branch("Blip_touchtrkid",&Blip_touchtrkid);
-	tree->Branch("Blip_badwirefrac",&Blip_badwirefrac);
 	tree->Branch("Blip_pl0_nwires",&Blip_pl0_nwires);
 	tree->Branch("Blip_pl1_nwires",&Blip_pl1_nwires);
 	tree->Branch("Blip_pl2_nwires",&Blip_pl2_nwires);
 	tree->Branch("Blip_pl0_bydeadwire",&Blip_pl0_bydeadwire);
 	tree->Branch("Blip_pl1_bydeadwire",&Blip_pl1_bydeadwire);
 	tree->Branch("Blip_pl2_bydeadwire",&Blip_pl2_bydeadwire);
-	tree->Branch("Blip_pl0_centerwire",&Blip_pl0_centerwire);
-	tree->Branch("Blip_pl1_centerwire",&Blip_pl1_centerwire);
-	tree->Branch("Blip_pl2_centerwire",&Blip_pl2_centerwire);
-	tree->Branch("Blip_true_g4id",&Blip_true_g4id);	
+	tree->Branch("Blip_true_g4id",&Blip_true_g4id);
+	tree->Branch("Blip_true_pdg",&Blip_true_pdg);	
 	tree->Branch("Blip_true_energy",&Blip_true_energy);
 
 	// -----------------------------------------------------------------------------------------------------------------------------------------
@@ -600,6 +626,36 @@ void mcc9_10_neutrino_selection::Loop() {
 		TH1D* POTCountHist = (TH1D*)(POTFile->Get("POTCountHist"));
 		POTCount = POTCountHist->GetBinContent(1);
 		POTFile->Close();
+
+		fChain->SetBranchAddress("weightsFlux", &weightsFlux, &b_weightsFlux);
+		fChain->SetBranchAddress("weightsGenie", &weightsGenie, &b_weightsGenie);
+		fChain->SetBranchAddress("weightsReint", &weightsReint, &b_weightsReint);
+		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
+		fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
+		fChain->SetBranchAddress("weightSplineTimesTune", &weightSplineTimesTune, &b_weightSplineTimesTune);
+		fChain->SetBranchAddress("knobRPAup", &knobRPAup, &b_knobRPAup);
+		fChain->SetBranchAddress("knobRPAdn", &knobRPAdn, &b_knobRPAdn);
+		fChain->SetBranchAddress("knobCCMECup", &knobCCMECup, &b_knobCCMECup);
+		fChain->SetBranchAddress("knobCCMECdn", &knobCCMECdn, &b_knobCCMECdn);
+		fChain->SetBranchAddress("knobAxFFCCQEup", &knobAxFFCCQEup, &b_knobAxFFCCQEup);
+		fChain->SetBranchAddress("knobAxFFCCQEdn", &knobAxFFCCQEdn, &b_knobAxFFCCQEdn);
+		fChain->SetBranchAddress("knobVecFFCCQEup", &knobVecFFCCQEup, &b_knobVecFFCCQEup);
+		fChain->SetBranchAddress("knobVecFFCCQEdn", &knobVecFFCCQEdn, &b_knobVecFFCCQEdn);
+		fChain->SetBranchAddress("knobDecayAngMECup", &knobDecayAngMECup, &b_knobDecayAngMECup);
+		fChain->SetBranchAddress("knobDecayAngMECdn", &knobDecayAngMECdn, &b_knobDecayAngMECdn);
+		fChain->SetBranchAddress("knobThetaDelta2Npiup", &knobThetaDelta2Npiup, &b_knobThetaDelta2Npiup);
+		fChain->SetBranchAddress("knobThetaDelta2Npidn", &knobThetaDelta2Npidn, &b_knobThetaDelta2Npidn);
+		fChain->SetBranchAddress("knobThetaDelta2NRadup", &knobThetaDelta2NRadup, &b_knobThetaDelta2NRadup);
+		fChain->SetBranchAddress("knobThetaDelta2NRaddn", &knobThetaDelta2NRaddn, &b_knobThetaDelta2NRaddn);
+		fChain->SetBranchAddress("knobNormCCCOHup", &knobNormCCCOHup, &b_knobNormCCCOHup);
+		fChain->SetBranchAddress("knobNormCCCOHdn", &knobNormCCCOHdn, &b_knobNormCCCOHdn);
+		fChain->SetBranchAddress("knobNormNCCOHup", &knobNormNCCOHup, &b_knobNormNCCOHup);
+		fChain->SetBranchAddress("knobNormNCCOHdn", &knobNormNCCOHdn, &b_knobNormNCCOHdn);
+		fChain->SetBranchAddress("knobxsr_scc_Fv3up", &knobxsr_scc_Fv3up, &b_knobxsr_scc_Fv3up);
+		fChain->SetBranchAddress("knobxsr_scc_Fv3dn", &knobxsr_scc_Fv3dn, &b_knobxsr_scc_Fv3dn);
+		fChain->SetBranchAddress("knobxsr_scc_Fa3up", &knobxsr_scc_Fa3up, &b_knobxsr_scc_Fa3up);
+		fChain->SetBranchAddress("knobxsr_scc_Fa3dn", &knobxsr_scc_Fa3dn, &b_knobxsr_scc_Fa3dn);
+		fChain->SetBranchAddress("RootinoFix", &RootinoFix, &b_RootinoFix);
 	
 	}
 
@@ -734,49 +790,98 @@ void mcc9_10_neutrino_selection::Loop() {
 	POTWeight = POTScale;	
 	ROOTinoWeight = 1.;
 
-	// -----------------------------------------------------------------------------
-
-	// Only for MC 
-	// Need to take care of the bug fix / T2K tune weights & for the systematics weights
-
-	if (string(fLabel).find("Overlay") != std::string::npos) {
-
-		fChain->SetBranchAddress("weightSpline", &weightSpline, &b_weightSpline);
-		fChain->SetBranchAddress("weightTune", &weightTune, &b_weightTune);
-
-		// Only the CV samples
-
-		if ( 
-			   fLabel == "Overlay9_Run1" 
-			|| fLabel == "Overlay9_Run2" 
-			|| fLabel == "Overlay9_Run3" 
-			|| fLabel == "Overlay9_Run4a" 
-			|| fLabel == "Overlay9_Run4b" 
-			|| fLabel == "Overlay9_Run4c" 
-			|| fLabel == "Overlay9_Run4d" 
-			|| fLabel == "Overlay9_Run5"
-			|| fLabel == "OverlayDirt9_Run1" 
-			|| fLabel == "OverlayDirt9_Run2" 
-			|| fLabel == "OverlayDirt9_Run3"  
-			|| fLabel == "OverlayDirt9_Run4a" 
-			|| fLabel == "OverlayDirt9_Run4b" 
-			|| fLabel == "OverlayDirt9_Run4c" 
-			|| fLabel == "OverlayDirt9_Run4d" 
-			|| fLabel == "OverlayDirt9_Run5"
-		) {
-
-			fChain->SetBranchAddress("weights", &weights, &b_weights);
-
-		}
-
-	}
-
 	//--------------------//
 
 	// WC Generic neutrino selection
 
+	int reco_Ntrack;
 	float numu_cc_flag;
+	Int_t reco_mother[500];   //[reco_Ntrack]
+	Int_t reco_id[500];   //[reco_Ntrack]
+	Int_t reco_pdg[500];   //[reco_Ntrack]
+	Float_t reco_startMomentum[500][4];   //[reco_Ntrack]
+	float reco_nuvtxX;
+	float reco_nuvtxY;
+	float reco_nuvtxZ;	
+   vector<double>  *Trec_spacepoints_x;
+   vector<double>  *Trec_spacepoints_y;
+   vector<double>  *Trec_spacepoints_z;
+   vector<double>  *Trec_spacepoints_q;
+   vector<double>  *Trec_spacepoints_cluster_id;
+   vector<double>  *Trec_spacepoints_real_cluster_id;
+   vector<double>  *Trec_spacepoints_sub_cluster_id;
+   vector<double>  *Treccharge_spacepoints_x;
+   vector<double>  *Treccharge_spacepoints_y;
+   vector<double>  *Treccharge_spacepoints_z;
+   vector<double>  *Treccharge_spacepoints_q;
+   vector<double>  *Treccharge_spacepoints_cluster_id;
+   vector<double>  *Treccharge_spacepoints_real_cluster_id;
+   vector<double>  *Treccharge_spacepoints_sub_cluster_id;
+   vector<double>  *Trecchargeblob_spacepoints_x;
+   vector<double>  *Trecchargeblob_spacepoints_y;
+   vector<double>  *Trecchargeblob_spacepoints_z;
+   vector<double>  *Trecchargeblob_spacepoints_q;
+   vector<double>  *Trecchargeblob_spacepoints_cluster_id;
+   vector<double>  *Trecchargeblob_spacepoints_real_cluster_id;
+   vector<double>  *Trecchargeblob_spacepoints_sub_cluster_id;	
+   Double_t        mcs_mu_tracklen;
+   Double_t        mcs_emu_tracklen;   
+
+	TBranch* b_reco_Ntrack;
 	TBranch* b_numu_cc_flag;
+	TBranch* b_reco_mother;
+	TBranch* b_reco_pdg;
+	TBranch* b_reco_id;
+	TBranch* b_reco_startMomentum;
+	TBranch* b_reco_nuvtxX;
+	TBranch* b_reco_nuvtxY;
+	TBranch* b_reco_nuvtxZ;	
+	TBranch        *b_Trec_spacepoints_x;   //!
+	TBranch        *b_Trec_spacepoints_y;   //!
+	TBranch        *b_Trec_spacepoints_z;   //!
+	TBranch        *b_Trec_spacepoints_q;   //!
+	TBranch        *b_Trec_spacepoints_cluster_id;   //!
+	TBranch        *b_Trec_spacepoints_real_cluster_id;   //!
+	TBranch        *b_Trec_spacepoints_sub_cluster_id;   //!
+	TBranch        *b_Treccharge_spacepoints_x;   //!
+	TBranch        *b_Treccharge_spacepoints_y;   //!
+	TBranch        *b_Treccharge_spacepoints_z;   //!
+	TBranch        *b_Treccharge_spacepoints_q;   //!
+	TBranch        *b_Treccharge_spacepoints_cluster_id;   //!
+	TBranch        *b_Treccharge_spacepoints_real_cluster_id;   //!
+	TBranch        *b_Treccharge_spacepoints_sub_cluster_id;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_x;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_y;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_z;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_q;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_cluster_id;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_real_cluster_id;   //!
+	TBranch        *b_Trecchargeblob_spacepoints_sub_cluster_id;   //!
+	TBranch        *b_mcs_mu_tracklen;   //!
+	TBranch        *b_mcs_emu_tracklen;   //!		
+
+	Trec_spacepoints_x = 0;
+	Trec_spacepoints_y = 0;
+	Trec_spacepoints_z = 0;
+	Trec_spacepoints_q = 0;
+	Trec_spacepoints_cluster_id = 0;
+	Trec_spacepoints_real_cluster_id = 0;
+	Trec_spacepoints_sub_cluster_id = 0;
+	Treccharge_spacepoints_x = 0;
+	Treccharge_spacepoints_y = 0;
+	Treccharge_spacepoints_z = 0;
+	Treccharge_spacepoints_q = 0;
+	Treccharge_spacepoints_cluster_id = 0;
+	Treccharge_spacepoints_real_cluster_id = 0;
+	Treccharge_spacepoints_sub_cluster_id = 0;
+	Trecchargeblob_spacepoints_x = 0;
+	Trecchargeblob_spacepoints_y = 0;
+	Trecchargeblob_spacepoints_z = 0;
+	Trecchargeblob_spacepoints_q = 0;
+	Trecchargeblob_spacepoints_cluster_id = 0;
+	Trecchargeblob_spacepoints_real_cluster_id = 0;
+	Trecchargeblob_spacepoints_sub_cluster_id = 0;
+
 	Long64_t wc_nbytes = 0, wc_nb = 0;  
 	TTree* wc = nullptr;
 
@@ -785,6 +890,12 @@ void mcc9_10_neutrino_selection::Loop() {
 	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;  	
 	TTree* wc_kine = nullptr;	
 
+	Long64_t wc_pfeval_nbytes = 0, wc_pfeval_nb = 0;  	
+	TTree* wc_pfeval = nullptr;
+	
+	Long64_t wc_sp_nbytes = 0, wc_sp_nb = 0;  	
+	TTree* wc_sp = nullptr;	
+
 	if (fSample.Contains("unified")) {
 
 		wc = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
@@ -792,6 +903,41 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		wc_kine = (TTree*)(f_file->Get("wcpselection/T_BDTvars"));
 		wc_kine->SetBranchAddress("numu_score", &numu_score, &b_numu_score);		
+
+		wc_pfeval = (TTree*)(f_file->Get("wcpselection/T_PFeval"));
+		wc_pfeval->SetBranchAddress("reco_Ntrack", &reco_Ntrack, &b_reco_Ntrack);
+		wc_pfeval->SetBranchAddress("reco_id", &reco_id, &b_reco_id);
+		wc_pfeval->SetBranchAddress("reco_pdg", &reco_pdg, &b_reco_pdg);	
+		wc_pfeval->SetBranchAddress("reco_mother", &reco_mother, &b_reco_mother);	
+		wc_pfeval->SetBranchAddress("reco_startMomentum", &reco_startMomentum, &b_reco_startMomentum);	
+		wc_pfeval->SetBranchAddress("reco_nuvtxX", &reco_nuvtxX, &b_reco_nuvtxX);	
+		wc_pfeval->SetBranchAddress("reco_nuvtxY", &reco_nuvtxY, &b_reco_nuvtxY);	
+		wc_pfeval->SetBranchAddress("reco_nuvtxZ", &reco_nuvtxZ, &b_reco_nuvtxZ);
+		wc_pfeval->SetBranchAddress("mcs_mu_tracklen", &mcs_mu_tracklen, &b_mcs_mu_tracklen);
+		wc_pfeval->SetBranchAddress("mcs_emu_tracklen", &mcs_emu_tracklen, &b_mcs_emu_tracklen);			
+		
+		wc_sp = (TTree*)(f_file->Get("wcpselection/T_spacepoints"));	
+		wc_sp->SetBranchAddress("Trec_spacepoints_x", &Trec_spacepoints_x, &b_Trec_spacepoints_x);
+		wc_sp->SetBranchAddress("Trec_spacepoints_y", &Trec_spacepoints_y, &b_Trec_spacepoints_y);
+		wc_sp->SetBranchAddress("Trec_spacepoints_z", &Trec_spacepoints_z, &b_Trec_spacepoints_z);
+		wc_sp->SetBranchAddress("Trec_spacepoints_q", &Trec_spacepoints_q, &b_Trec_spacepoints_q);
+		wc_sp->SetBranchAddress("Trec_spacepoints_cluster_id", &Trec_spacepoints_cluster_id, &b_Trec_spacepoints_cluster_id);
+		wc_sp->SetBranchAddress("Trec_spacepoints_real_cluster_id", &Trec_spacepoints_real_cluster_id, &b_Trec_spacepoints_real_cluster_id);
+		wc_sp->SetBranchAddress("Trec_spacepoints_sub_cluster_id", &Trec_spacepoints_sub_cluster_id, &b_Trec_spacepoints_sub_cluster_id);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_x", &Treccharge_spacepoints_x, &b_Treccharge_spacepoints_x);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_y", &Treccharge_spacepoints_y, &b_Treccharge_spacepoints_y);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_z", &Treccharge_spacepoints_z, &b_Treccharge_spacepoints_z);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_q", &Treccharge_spacepoints_q, &b_Treccharge_spacepoints_q);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_cluster_id", &Treccharge_spacepoints_cluster_id, &b_Treccharge_spacepoints_cluster_id);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_real_cluster_id", &Treccharge_spacepoints_real_cluster_id, &b_Treccharge_spacepoints_real_cluster_id);
+		wc_sp->SetBranchAddress("Treccharge_spacepoints_sub_cluster_id", &Treccharge_spacepoints_sub_cluster_id, &b_Treccharge_spacepoints_sub_cluster_id);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_x", &Trecchargeblob_spacepoints_x, &b_Trecchargeblob_spacepoints_x);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_y", &Trecchargeblob_spacepoints_y, &b_Trecchargeblob_spacepoints_y);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_z", &Trecchargeblob_spacepoints_z, &b_Trecchargeblob_spacepoints_z);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_q", &Trecchargeblob_spacepoints_q, &b_Trecchargeblob_spacepoints_q);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_cluster_id", &Trecchargeblob_spacepoints_cluster_id, &b_Trecchargeblob_spacepoints_cluster_id);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_real_cluster_id", &Trecchargeblob_spacepoints_real_cluster_id, &b_Trecchargeblob_spacepoints_real_cluster_id);
+		wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_sub_cluster_id", &Trecchargeblob_spacepoints_sub_cluster_id, &b_Trecchargeblob_spacepoints_sub_cluster_id);			
 
 	}
 
@@ -813,7 +959,15 @@ void mcc9_10_neutrino_selection::Loop() {
 
 			Long64_t wc_kine_i_entry = wc_kine->LoadTree(jentry);
 			wc_kine_nb = wc_kine->GetEntry(jentry);   
-			wc_kine_nbytes += wc_kine_nb;				
+			wc_kine_nbytes += wc_kine_nb;	
+			
+			Long64_t wc_pfeval_i_entry = wc_pfeval->LoadTree(jentry);
+			wc_pfeval_nb = wc_pfeval->GetEntry(jentry);   
+			wc_pfeval_nbytes += wc_pfeval_nb;	
+
+			Long64_t wc_sp_i_entry = wc_sp->LoadTree(jentry);
+			wc_sp_nb = wc_sp->GetEntry(jentry);   
+			wc_sp_nbytes += wc_sp_nb;				
 		
 		}
 
@@ -831,50 +985,21 @@ void mcc9_10_neutrino_selection::Loop() {
 
 			Weight = weightSpline;
 			T2KWeight = weightTune;
+			ROOTinoWeight = 1.;
 
-			if (
-				   fLabel == "Overlay9_Run1"
-				|| fLabel == "Overlay9_Run2"
-				|| fLabel == "Overlay9_Run3"
-				|| fLabel == "Overlay9_Run4a"
-				|| fLabel == "Overlay9_Run4b"
-				|| fLabel == "Overlay9_Run4c"
-				|| fLabel == "Overlay9_Run4d"
-				|| fLabel == "Overlay9_Run5"
-				|| fLabel == "OverlayDirt9_Run1"
-				|| fLabel == "OverlayDirt9_Run2"
-				|| fLabel == "OverlayDirt9_Run3"
-				|| fLabel == "OverlayDirt9_Run4a"
-				|| fLabel == "OverlayDirt9_Run4b"
-				|| fLabel == "OverlayDirt9_Run4c"
-				|| fLabel == "OverlayDirt9_Run4d"
-				|| fLabel == "OverlayDirt9_Run5"
-			) {
-
-
-				for ( auto& pair : *weights ) {
-
-					if ( pair.first == "All_UBGenie") {  All_UBGenie = pair.second; }
-					else if ( pair.first == "AxFFCCQEshape_UBGenie") {  AxFFCCQEshape_UBGenie = pair.second; }
-					else if ( pair.first == "DecayAngMEC_UBGenie") {  DecayAngMEC_UBGenie = pair.second; }
-					else if ( pair.first == "NormCCCOH_UBGenie") {  NormCCCOH_UBGenie = pair.second; }
-					else if ( pair.first == "NormNCCOH_UBGenie") {  NormNCCOH_UBGenie = pair.second; }
-					else if ( pair.first == "RPA_CCQE_UBGenie") {  RPA_CCQE_UBGenie = pair.second; }
-					else if ( pair.first == "ThetaDelta2NRad_UBGenie") {  ThetaDelta2NRad_UBGenie = pair.second; }
-					else if ( pair.first == "Theta_Delta2Npi_UBGenie") {  Theta_Delta2Npi_UBGenie = pair.second; }
-					else if ( pair.first == "VecFFCCQEshape_UBGenie") {  VecFFCCQEshape_UBGenie = pair.second; }
-					else if ( pair.first == "XSecShape_CCMEC_UBGenie") {  XSecShape_CCMEC_UBGenie = pair.second; }
-
-
-					else if ( pair.first == "flux_all") {  fluxes = pair.second; }
-					else if ( pair.first == "reint_all") {  reinteractions = pair.second; }
-					else if ( pair.first == "RootinoFix_UBGenie") {  ROOTinoWeight = pair.second.at(0); }
-
-					//else {  cout << "pair.first = " << pair.first << " pair.second.size() = " << pair.second.size() << endl; }
-
-				}
-
-			}
+			reinteractions = *weightsReint;
+			fluxes = *weightsFlux;
+			All_UBGenie = *weightsGenie;
+			AxFFCCQEshape_UBGenie = {knobAxFFCCQEup, knobAxFFCCQEdn};
+			DecayAngMEC_UBGenie = {knobDecayAngMECup, knobDecayAngMECdn};
+			NormCCCOH_UBGenie = {knobNormCCCOHup,knobNormCCCOHdn};
+			NormNCCOH_UBGenie = {knobNormNCCOHup,knobNormNCCOHdn};
+			RPA_CCQE_UBGenie = {knobRPAup,knobRPAdn};
+			ThetaDelta2NRad_UBGenie = {knobThetaDelta2NRadup,knobThetaDelta2NRaddn};
+			Theta_Delta2Npi_UBGenie = {knobThetaDelta2Npiup,knobThetaDelta2Npidn};
+			VecFFCCQEshape_UBGenie = {knobVecFFCCQEup,knobVecFFCCQEdn};
+			XSecShape_CCMEC_UBGenie = {knobCCMECup,knobCCMECdn};
+			ROOTinoWeight = RootinoFix;
 
 		} else {
 
@@ -893,10 +1018,18 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// Loop over the candidate track pairs
 
+		wc_reco_mother.clear();
+		wc_reco_p.clear();
+		wc_reco_pdg.clear();
+		wc_reco_id.clear();
+
 		CandidateMuP_Distance.clear();
 		Vertex_X.clear();
 		Vertex_Y.clear();
 		Vertex_Z.clear();
+		wc_Vertex_X.clear();
+		wc_Vertex_Y.clear();
+		wc_Vertex_Z.clear();		
 		CandidateMuStartVertexDistance.clear();
 		CandidatePStartVertexDistance.clear();
 		CandidateMuEndVertexDistance.clear();
@@ -1045,7 +1178,6 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_x.clear();
 		Blip_y.clear();
 		Blip_z.clear();
-		Blip_size.clear();
 		Blip_energy.clear();
 		Blip_charge.clear();
 		Blip_nplanes.clear();
@@ -1053,20 +1185,27 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_proxtrkid.clear();
 		Blip_touchtrk.clear();
 		Blip_touchtrkid.clear();
-		Blip_badwirefrac.clear();
 		Blip_pl0_nwires.clear();
 		Blip_pl1_nwires.clear();
 		Blip_pl2_nwires.clear();
 		Blip_pl0_bydeadwire.clear();
 		Blip_pl1_bydeadwire.clear();
 		Blip_pl2_bydeadwire.clear();
-		Blip_pl0_centerwire.clear();
-		Blip_pl1_centerwire.clear();
-		Blip_pl2_centerwire.clear();
 		Blip_true_g4id.clear();
-		Blip_true_energy.clear();		
+		Blip_true_pdg.clear();
+		Blip_true_energy.clear();	
 
-		// -----------------------------------------------------------------------------
+		//----------------------------------------//	
+		
+		// wc spacepoints
+
+		trecchargeblob_spacepoints_x.clear();
+		trecchargeblob_spacepoints_y.clear();
+		trecchargeblob_spacepoints_z.clear();
+		trecchargeblob_spacepoints_q.clear();
+		trecchargeblob_spacepoints_real_cluster_id.clear();	
+
+		//----------------------------------------//
 
 		// Loop over the PFParticles and keep track of the number of tracks and showers 
 
@@ -1169,15 +1308,46 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// ---------------------------------------------------------------------------------------------------------------------------------
 
-		// Reconstructed Vertex
+		// Reconstructed vertex
+		// require that both the pd and wc vertices
+		// are contained in the FV 
 
 		TVector3 VertexLocation(reco_nu_vtx_sce_x,reco_nu_vtx_sce_y,reco_nu_vtx_sce_z);
+		TVector3 wc_VertexLocation(reco_nuvtxX,reco_nuvtxY,reco_nuvtxZ);		
 
 		if (!tools.inFVVector(VertexLocation) ) { continue; }
+		if (!tools.inFVVector(wc_VertexLocation) ) { continue; }		
 
 		Vertex_X.push_back(reco_nu_vtx_sce_x);
 		Vertex_Y.push_back(reco_nu_vtx_sce_y);
 		Vertex_Z.push_back(reco_nu_vtx_sce_z);
+
+		wc_Vertex_X.push_back(reco_nuvtxX);
+		wc_Vertex_Y.push_back(reco_nuvtxY);
+		wc_Vertex_Z.push_back(reco_nuvtxZ);		
+
+		//--------------------//
+
+		// WC primary and non-primary pfparticles
+
+		wc_reco_p.resize(reco_Ntrack);
+
+		for (int i = 0; i < reco_Ntrack; i++) {
+
+			wc_reco_mother.push_back(reco_mother[i]);
+			wc_reco_pdg.push_back(reco_pdg[i]);
+			wc_reco_id.push_back(reco_id[i]);
+
+			for (int j = 0; j < 4; j++) {
+
+				wc_reco_p.at(i).push_back( reco_startMomentum[i][j] ); // GeV
+
+			}
+
+		}
+
+		wc_mcs_mu_tracklen = mcs_mu_tracklen;
+		wc_mcs_emu_tracklen = mcs_emu_tracklen;		
 
 		// ---------------------------------------------------------------------------------------------------------------------
 
@@ -1782,7 +1952,6 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_x = *blip_x;
 		Blip_y = *blip_y ;
 		Blip_z = *blip_z;
-		Blip_size = *blip_size;
 		Blip_energy = *blip_energy;
 		Blip_charge = *blip_charge;
 		Blip_nplanes = *blip_nplanes;
@@ -1790,24 +1959,31 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_proxtrkid = *blip_proxtrkid;
 		Blip_touchtrk = *blip_touchtrk;
 		Blip_touchtrkid = *blip_touchtrkid;
-		Blip_badwirefrac = *blip_badwirefrac;
 		Blip_pl0_nwires = *blip_pl0_nwires;
 		Blip_pl1_nwires = *blip_pl1_nwires;
 		Blip_pl2_nwires = *blip_pl2_nwires;
 		Blip_pl0_bydeadwire = *blip_pl0_bydeadwire;
 		Blip_pl1_bydeadwire = *blip_pl1_bydeadwire;
 		Blip_pl2_bydeadwire = *blip_pl2_bydeadwire;
-		Blip_pl0_centerwire = *blip_pl0_centerwire;
-		Blip_pl1_centerwire = *blip_pl1_centerwire;
-		Blip_pl2_centerwire = *blip_pl2_centerwire;
 		Blip_true_g4id = *blip_true_g4id;
-		Blip_true_energy = *blip_true_energy;			
+		Blip_true_pdg = *blip_true_pdg;
+		Blip_true_energy = *blip_true_energy;	
+		
+		//----------------------------------------//	
+		
+		// wc spacepoints
 
-		// ---------------------------------------------------------------------------------------------------------------------------------
+		trecchargeblob_spacepoints_x = *Trecchargeblob_spacepoints_x;
+		trecchargeblob_spacepoints_y = *Trecchargeblob_spacepoints_y;
+		trecchargeblob_spacepoints_z = *Trecchargeblob_spacepoints_z;
+		trecchargeblob_spacepoints_q = *Trecchargeblob_spacepoints_q;
+		trecchargeblob_spacepoints_real_cluster_id = *Trecchargeblob_spacepoints_real_cluster_id;			
+
+		//----------------------------------------//	
 
 		tree->Fill();
 
-		// ---------------------------------------------------------------------------------------------------------------------------------
+		//----------------------------------------//	
 
 	}
 

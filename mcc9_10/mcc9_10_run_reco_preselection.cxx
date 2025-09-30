@@ -7,22 +7,17 @@
 	// ---------------------------------------------------------------------------------- //
 	// ---------------------------------------------------------------------------------- //
 
-	//WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_data_run4b_v10_04_07_01_2000files.root");	
-	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/checkout_bnb_overlay_test_500files_weights.root");
-	//WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_noweights"); SamplePath.push_back("/pnfs/uboone/persistent/users/apapadop/mcc9_10/mcc9_10_pelee_ntuple.root");
-
-	//WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_03_Run4b_pandora_standalone_reco2_BNB_beam_on_reco2_ana_goodruns.root");
-	WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/apapadop/pelee_tuples_mcc9_10_slimmed/standalone_rse_matched.root");
-	/*WhichSampleArray.push_back("mcc9_10_ExtBNB9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_03_Run4b_pandora_standalone_reco2_BNB_beam_off_reco2_ana_goodruns.root");	
+	/*WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/apapadop/pelee_tuples_mcc9_10_slimmed/standalone_rse_matched.root");
+	WhichSampleArray.push_back("mcc9_10_ExtBNB9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_03_Run4b_pandora_standalone_reco2_BNB_beam_off_reco2_ana_goodruns.root");	
 	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_standalone"); SamplePath.push_back("/pnfs/uboone/scratch/users/rcross/hadd/MCC9.10_Test_Samples_v10_04_07_04_Run4b_pandora_standalone_reco2_BNB_nu_overlay_reco2_ana.root");	
 	WhichSampleArray.push_back("mcc9_10_OverlayDirt9_Run4b_standalone"); SamplePath.push_back("/exp/uboone/data/users/gardiner/MCC9.10_Test_Samples_v10_04_07_04_Run4b_pandora_standalone_reco2_BNB_dirt_reco2_ana.root");		
 	*/
-	//WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/MCC9.10_Test_Samples_v10_04_07_03_Run4b_super_unified_reco2_BNB_beam_on_reco2_hist.root");
-	WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/apapadop/pelee_tuples_mcc9_10_slimmed/wc_processed_rse_matched.root");
-	/*WhichSampleArray.push_back("mcc9_10_ExtBNB9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/MCC9.10_Test_Samples_v10_04_07_03_Run4b_super_unified_reco2_BNB_beam_off_reco2_hist.root");	
-	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/MCC9.10_Test_Samples_v10_04_07_04_Run4b_super_unified_reco2_BNB_nu_overlay_reco2_hist.root");	
-	WhichSampleArray.push_back("mcc9_10_OverlayDirt9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/fgao/mini_retreat_2025/MCC9.10_Test_Samples_v10_04_07_04_Run4b_super_unified_reco2_BNB_dirt_reco2_hist.root");		
-	*/
+
+	WhichSampleArray.push_back("mcc9_10_BeamOn9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/SURPRISE_Test_Samples_v10_04_07_05_Run4b_hyper_unified_reco2_BNB_beam_on_may8_reco2_hist_goodruns_62280934_snapshot.root");	
+	WhichSampleArray.push_back("mcc9_10_ExtBNB9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/SURPRISE_Test_Samples_v10_04_07_05_Run4b_hyper_unified_reco2_BNB_beam_off_may8_reco2_hist_goodruns_62280841_snapshot.root");	
+	WhichSampleArray.push_back("mcc9_10_Overlay9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/SURPRISE_Test_Samples_v10_04_07_05_Run4b_hyper_unified_reco2_BNB_nu_overlay_may8_reco2_hist_62280499_snapshot.root");	
+	WhichSampleArray.push_back("mcc9_10_OverlayDirt9_Run4b_unified"); SamplePath.push_back("/exp/uboone/data/users/eyandel/combined_reco/mcc910_test/processed_checkout_root_files/SURPRISE_Test_Samples_v10_04_07_05_Run4b_hyper_unified_reco2_BNB_dirt_may8_reco2_hist_62280564_snapshot.root");		
+	
 	// ---------------------------------------------------------------------------------- //
 	// ---------------------------------------------------------------------------------- //
 

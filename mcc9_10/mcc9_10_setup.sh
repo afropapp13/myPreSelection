@@ -12,8 +12,7 @@ setup uboonecode v10_04_04 -q e26:prof
 #mrbsetenv
 #export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$GENIE_INC/GENIE
 
-kx509
-#htgettoken -a htvaultprod.fnal.gov -i uboone
+#kx509
+htgettoken -a htvaultprod.fnal.gov -i uboone
 #httokensh -a htvaultprod.fnal.gov -i uboone -- /bin/bash
-voms-proxy-init -noregen -rfc -voms 'fermilab:/fermilab/sbnd/Role=Analysis'
-
+#voms-proxy-init -noregen -rfc -voms 'fermilab:/fermilab/sbnd/Role=Analysis'

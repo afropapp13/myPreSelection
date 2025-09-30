@@ -44,23 +44,23 @@ void rse_filter_sample() {
     TString path_slimmed = "/exp/uboone/data/users/apapadop/pelee_tuples_mcc9_10_slimmed/standalone_rse_matched.root";    
  
     TTree* t = (TTree*)(f->Get("nuselection/NeutrinoSelectionFilter"));
-    /*TTree* t_bdt = (TTree*)(f->Get("wcpselection/T_BDTvars"));
-    TTree* t_kine = (TTree*)(f->Get("wcpselection/T_KINEvars"));*/        
+    //TTree* t_bdt = (TTree*)(f->Get("wcpselection/T_BDTvars"));
+    //TTree* t_kine = (TTree*)(f->Get("wcpselection/T_KINEvars")); 
 
     int run, sub, evt;
     TBranch  *b_run, *b_sub, *b_evt;
 
-    t->SetBranchAddress("run", &run, &b_run);
-    t->SetBranchAddress("sub", &sub, &b_sub);
-    t->SetBranchAddress("evt", &evt, &b_evt);    
+    t->SetBranchAddress("run", &run);
+    t->SetBranchAddress("sub", &sub);
+    t->SetBranchAddress("evt", &evt);    
 
     int nentries = t->GetEntries();
     //int nentries = 1000;
     cout << "file entries = " << nentries << endl;
     Long64_t nbytes = 0, nb = 0;  
 
-    /*Long64_t bdt_nbytes = 0, bdt_nb = 0; 
-    Long64_t kine_nbytes = 0, kine_nb = 0;*/ 
+    //Long64_t bdt_nbytes = 0, bdt_nb = 0; 
+    //Long64_t kine_nbytes = 0, kine_nb = 0; 
 
     //------------------------------------//
 
@@ -70,29 +70,29 @@ void rse_filter_sample() {
     d_slimmed->cd();
     TTree* t_slimmed = t->CloneTree(0);  
     
-    /*TDirectory* d_wc_slimmed = f_slimmed->mkdir("wcpselection");
-    d_wc_slimmed->cd();
-    TTree* t_bdt_slimmed = t_bdt->CloneTree(0);  
-    TTree* t_kine_slimmed = t_kine->CloneTree(0);          
-*/
+    ///TDirectory* d_wc_slimmed = f_slimmed->mkdir("wcpselection");
+    //d_wc_slimmed->cd();
+    //TTree* t_bdt_slimmed = t_bdt->CloneTree(0);  
+    //TTree* t_kine_slimmed = t_kine->CloneTree(0);          
+
     //------------------------------------//   
 
     // loop over the input entries
 
-    for (int i = 0; i < nentries; i++ ) {
+   for (int i = 0; i < nentries; i++ ) {
 
 	    Long64_t i_entry = t->LoadTree(i);
 	    nb = t->GetEntry(i);   
-        nbytes += nb;
+            nbytes += nb;
 
-/*	    Long64_t bdt_i_entry = t_bdt->LoadTree(i);
-	    bdt_nb = t_bdt->GetEntry(i);   
-        bdt_nbytes += bdt_nb;
+	    //Long64_t bdt_i_entry = t_bdt->LoadTree(i);
+	    //bdt_nb = t_bdt->GetEntry(i);   
+            //bdt_nbytes += bdt_nb;
         
-	    Long64_t kine_i_entry = t_kine->LoadTree(i);
-	    kine_nb = t_kine->GetEntry(i);   
-        kine_nbytes += kine_nb;        
-*/
+	    //Long64_t kine_i_entry = t_kine->LoadTree(i);
+	    //kine_nb = t_kine->GetEntry(i);   
+            //kine_nbytes += kine_nb;        
+
         if (i%1000 == 0) {
             
             std::cout << "file entry: " << i/1000 << " k " << std::setprecision(3) << double(i)/nentries*100. << " %" << std::endl;
@@ -108,14 +108,13 @@ void rse_filter_sample() {
             if ( words[0] == std::to_string(run) && words[1] == std::to_string(sub) && words[2] == std::to_string(evt)) {
 
                 //std::cout << "Found match: " << run << " " << sub << " " << evt << std::endl;
-
-                f_slimmed->cd();
-                d_slimmed->cd();
+                //f_slimmed->cd();
+                //d_slimmed->cd();
                 t_slimmed->Fill();
 
-                /*d_wc_slimmed->cd();
-                t_bdt_slimmed->Fill();                
-                t_kine_slimmed->Fill();*/ 
+                //d_wc_slimmed->cd();
+                //t_bdt_slimmed->Fill();                
+                //t_kine_slimmed->Fill(); 
 
                 continue;
 
@@ -129,12 +128,13 @@ void rse_filter_sample() {
 
     //------------------------------------//  
 
-    f_slimmed->cd();
+    //f_slimmed->cd();
+    t_slimmed->Print();
     f_slimmed->Write();
+    cout << path_slimmed << " created" << endl;
+    cout << "TTree entries = " << t_slimmed->GetEntries() << endl;
     f_slimmed->Close();
 
     f->Close();
-
-    cout << path_slimmed << " created" << endl;
 
 }
