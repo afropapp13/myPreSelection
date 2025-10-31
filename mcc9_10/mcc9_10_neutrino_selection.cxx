@@ -29,7 +29,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	//--------------------//
 
-	// Output Files
+	// output files
 
 	TString FileName = preselection_file_path + "/PreSelection_"+fLabel+".root";
 	TFile* OutputFile = new TFile(FileName,"recreate");
@@ -43,7 +43,9 @@ void mcc9_10_neutrino_selection::Loop() {
 	cout << "file entries = " << nentries << endl;
 	Long64_t nbytes = 0, nb = 0;
 	Long64_t wc_nbytes = 0, wc_nb = 0;  
-	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;  	
+	Long64_t gl_vtx_nbytes = 0, gl_vtx_nb = 0;
+	Long64_t dl_nbytes = 0, dl_nb = 0;		
+	Long64_t wc_kine_nbytes = 0, wc_kine_nb = 0;	  	
 	Long64_t wc_eval_nbytes = 0, wc_eval_nb = 0;  		
 	Long64_t wc_pfeval_nbytes = 0, wc_pfeval_nb = 0;  		
 	Long64_t wc_sp_nbytes = 0, wc_sp_nb = 0; 	
@@ -76,8 +78,15 @@ void mcc9_10_neutrino_selection::Loop() {
 	float wc_kine_pio_phi_2;
 	bool wc_match_isFC;
 	int wc_kine_pio_flag;
+	float wc_numu_cc_flag;	
 
     // wc ntuple truth-matching variables
+
+	vector<double> neutron_truthMatch_p;
+	vector<double> proton_truthMatch_p;	
+	vector<double> neutron_truthMatch_ke;
+	vector<double> proton_truthMatch_ke;			
+
 	int g1_truthMatch_pdg;
 	double g1_truthMatch_p;
 	double g1_truthMatch_px;
@@ -94,11 +103,15 @@ void mcc9_10_neutrino_selection::Loop() {
 	double g2_truthMatch_costheta;
 	double g2_truthMatch_phi; // rad		
 
+	int nspacepoints;
 	vector<double>  trecchargeblob_spacepoints_x;
 	vector<double>  trecchargeblob_spacepoints_y;
 	vector<double>  trecchargeblob_spacepoints_z;
 	vector<double>  trecchargeblob_spacepoints_q;
-	vector<double>  trecchargeblob_spacepoints_real_cluster_id;		
+	vector<double>  trecchargeblob_spacepoints_real_cluster_id;	
+	double sp_q_median;
+	vector<double> photon_q_median;		
+	vector<double> neutron_q_median;			
 
 	vector<int> wc_kine_particle_type;
 	vector<float> wc_kine_energy_particle;
@@ -119,6 +132,11 @@ void mcc9_10_neutrino_selection::Loop() {
 	int other;
 	int nupdg;	
 
+	double true_sum_neutron_ke;
+	std::vector<double> true_neutron_ke;
+	double true_sum_proton_ke;		
+	std::vector<double> true_proton_ke;	
+
 	// X = any other particle
 	// M >= 2
 	// N >= 1
@@ -135,6 +153,13 @@ void mcc9_10_neutrino_selection::Loop() {
 	int bkg_1pi0_Nmh_X; // m = mesons (mostly etas), h = heavy particles (Sigmas, Lambdas)	
 	int bkg_1pi0_Nl_X; // l = lepton		
 	int bkg_other;	
+
+	bool truth_contains_neutron;
+	bool reco_contains_neutron;	
+	bool truth_contains_proton;
+	bool reco_contains_proton;
+	bool truth_contains_proton_or_neutron;
+	bool reco_contains_proton_or_neutron;			
 
 	std::vector<unsigned short> All_UBGenie;
 	std::vector<double> AxFFCCQEshape_UBGenie;
@@ -157,6 +182,37 @@ void mcc9_10_neutrino_selection::Loop() {
 	double True_Vy;
 	double True_Vz;
 
+	int wc_primary_proton_counter = 0;
+	int wc_primary_muon_counter = 0;
+	int wc_primary_charged_pion_counter = 0;
+	int wc_primary_electron_counter = 0;
+	int wc_primary_photon_counter = 0;
+	int wc_primary_neutron_counter = 0;
+	int wc_primary_neutral_pion_counter = 0;
+
+	int wc_secondary_proton_counter = 0;
+	int wc_secondary_muon_counter = 0;
+	int wc_secondary_charged_pion_counter = 0;
+	int wc_secondary_electron_counter = 0;
+	int wc_secondary_photon_counter = 0;
+	int wc_secondary_neutron_counter = 0;
+	int wc_secondary_neutral_pion_counter = 0;	
+
+	int wc_nshowers = 0;
+	int wc_nshowers_0MeV = 0;
+	int wc_nshowers_20MeV = 0;		
+	int wc_nmuontracks = 0;
+	int wc_nprotontracks = 0;
+	int wc_npiontracks = 0;
+
+	float wc_shw_sp_n_good_showers;
+	float wc_shw_sp_n_20mev_showers;
+	float wc_shw_sp_n_br1_showers;
+	float wc_shw_sp_n_br2_showers;
+	float wc_shw_sp_n_br3_showers;
+	float wc_shw_sp_n_br4_showers;
+	float wc_shw_sp_n_20br1_showers;	
+
 	//--------------------//
 
 	float ns_time;
@@ -168,6 +224,7 @@ void mcc9_10_neutrino_selection::Loop() {
 	float fCosmicDirAll3D;
 	int fcrtveto;
 	float fcrthitpe;
+	float pd_shr_score;
 
 	int wc_reco_g1_id;
 	int wc_reco_g2_id;	
@@ -176,6 +233,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	// wc reco info
 
+	std::vector<int> wc_reco_larpid_process;	
 	std::vector<int> wc_reco_mother;
 	std::vector< std::vector<float> > wc_reco_p;
 	std::vector< std::vector<float> > wc_reco_start;
@@ -183,11 +241,56 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<int> wc_reco_pdg;
 	std::vector<int> wc_reco_id;	
 
+	int wc_temp_g1_id;
+	int wc_temp_g2_id;			
+
 	//--------------------//
+
+	// wc vertex
 
 	std::vector<float> Vertex_X;
 	std::vector<float> Vertex_Y;
 	std::vector<float> Vertex_Z;
+	int wc_vertex_contained;
+
+	//--------------------//
+
+	// pandora vertex
+
+	std::vector<float> pd_vertex_x;
+	std::vector<float> pd_vertex_y;
+	std::vector<float> pd_vertex_z;	
+	int pd_vertex_contained;
+
+	//--------------------//
+
+	// pandora nugraph
+	
+   Int_t           pd_slcng2mip;
+   Int_t           pd_slcng2hip;
+   Int_t           pd_slcng2shr;
+   Int_t           pd_slcng2mcl;
+   Int_t           pd_slcng2dfs;
+   Int_t           pd_slcng2bkg;
+   Int_t           pd_clung2mip;
+   Int_t           pd_clung2hip;
+   Int_t           pd_clung2shr;
+   Int_t           pd_clung2mcl;
+   Int_t           pd_clung2dfs;
+   Int_t           pd_clung2bkg;
+   vector<int>     pd_pfng2semlabel;
+   vector<float>   pd_pfng2mipfrac;
+   vector<float>   pd_pfng2hipfrac;
+   vector<float>   pd_pfng2shrfrac;
+   vector<float>   pd_pfng2mclfrac;
+   vector<float>   pd_pfng2dfsfrac;
+   vector<float>   pd_pfng2bkgfrac;
+   vector<float>   pd_pfng2mipavrg;
+   vector<float>   pd_pfng2hipavrg;
+   vector<float>   pd_pfng2shravrg;
+   vector<float>   pd_pfng2mclavrg;
+   vector<float>   pd_pfng2dfsavrg;
+   vector<float>   pd_pfng2bkgavrg;	
 
 	//--------------------//
 
@@ -200,7 +303,8 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_pi0_p;
 	std::vector<double> reco_pi0_phi; // rad
 	std::vector<double> reco_pi0_costheta;
-	std::vector<double> reco_cm_costheta;	
+	std::vector<double> reco_cm_costheta;
+	std::vector<double> reco_deltapt;		
 	std::vector<double> reco_pi0_invmass;	
 
 	//--------------------//
@@ -210,13 +314,20 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_g1_p;
 	std::vector<double> reco_g1_phi; // rad
 	std::vector<double> reco_g1_costheta;
+	double reco_g1_length;
+	double reco_g1_length_x;
+	double reco_g1_length_y;
+	double reco_g1_length_z;			
+
 	double g1_start_x;
 	double g1_start_y;
 	double g1_start_z;	
+	int g1_start_contained;
 	
 	double g1_end_x;
 	double g1_end_y;
 	double g1_end_z;	
+	int g1_end_contained;
 
 	//--------------------//
 
@@ -225,28 +336,46 @@ void mcc9_10_neutrino_selection::Loop() {
 	std::vector<double> reco_g2_p;
 	std::vector<double> reco_g2_phi; // rad
 	std::vector<double> reco_g2_costheta;
+	double reco_g2_length;
+	double reco_g2_length_x;
+	double reco_g2_length_y;
+	double reco_g2_length_z;			
+
 	double g2_start_x;
 	double g2_start_y;
 	double g2_start_z;	
+	int g2_start_contained;
 
 	double g2_end_x;
 	double g2_end_y;
-	double g2_end_z;	
+	double g2_end_z;
+	int g2_end_contained;	
 
 	double two_shower_start_dist;
+	double two_shower_end_dist;	
+	bool flipped_showers;
 	
 	//--------------------//
 
 	// Blip info
 
+	Int_t           ngood_blips;	
 	Int_t           nBlips_saved;
+	vector<float>   Blip_g1_cos_alpha;
+	vector<float>   Blip_g2_cos_alpha;
+	vector<float>   Blip_vt_cos_alpha;		
+	vector<float>   Good_blip_ds;
+	vector<float>   Blip_dx;
+	vector<float>   Blip_dw;	
 	vector<float>   Blip_x;
 	vector<float>   Blip_y;
 	vector<float>   Blip_z;
 	vector<float>   Blip_energy;
+	vector<float>   Good_blip_energy;	
 	vector<float>   Blip_charge;
 	vector<int>     Blip_nplanes;
 	vector<float>   Blip_proxtrkdist;
+	vector<float>   Good_blip_proxtrkdist;	
 	vector<int>     Blip_proxtrkid;
 	vector<bool>    Blip_touchtrk;
 	vector<int>     Blip_touchtrkid;
@@ -256,8 +385,30 @@ void mcc9_10_neutrino_selection::Loop() {
 	vector<bool>    Blip_pl0_bydeadwire;
 	vector<bool>    Blip_pl1_bydeadwire;
 	vector<bool>    Blip_pl2_bydeadwire;
+	vector<int>     Blip_true_pdg;
 	vector<int>     Blip_true_g4id;
 	vector<float>   Blip_true_energy;
+	int n_blip_pd_vtx_25cm;
+	int n_blip_pd_vtx_50cm;	
+	int n_blip_pd_vtx_100cm;
+	int n_blip_pd_vtx_25cm_g1_anticone;
+	int n_blip_pd_vtx_50cm_g1_anticone;	
+	int n_blip_pd_vtx_100cm_g1_anticone;
+	int n_blip_pd_vtx_25cm_g1_cone;
+	int n_blip_pd_vtx_50cm_g1_cone;	
+	int n_blip_pd_vtx_100cm_g1_cone;
+	int n_blip_pd_vtx_25cm_g2_anticone;
+	int n_blip_pd_vtx_50cm_g2_anticone;	
+	int n_blip_pd_vtx_100cm_g2_anticone;
+	int n_blip_pd_vtx_25cm_g2_cone;
+	int n_blip_pd_vtx_50cm_g2_cone;	
+	int n_blip_pd_vtx_100cm_g2_cone;
+	double sum_reco_g1_blip_e_25cm;
+	double sum_reco_g2_blip_e_25cm;
+	double sum_reco_g1_blip_e_50cm;
+	double sum_reco_g2_blip_e_50cm;	
+	double sum_reco_g1_blip_e_100cm;
+	double sum_reco_g2_blip_e_100cm;				
 
 	//--------------------//
 
@@ -269,6 +420,49 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	int pd_reco_track_count;
 	int pd_reco_shower_count;
+
+	int pd_reco_secondary_track_count;
+	int pd_reco_secondary_shower_count;	
+
+	//--------------------//
+
+	// glee
+
+	vector<double>  gl_trackstub_candidate_veto_score;	
+	int gl_trackstub_num_candidates;
+	Double_t        gl_reco_vertex_x;
+	Double_t        gl_reco_vertex_y;
+	Double_t        gl_reco_vertex_z;
+	bool gl_vertex_contained;	
+   	Int_t gl_sss_num_candidates;
+   	Int_t gl_reco_asso_showers;
+   	Int_t gl_reco_asso_tracks;			
+
+	//--------------------//
+
+	// dl lantern
+
+	int dl_foundVertex;
+	float dl_vtxX;
+	float dl_vtxY;
+	float dl_vtxZ;
+	float dl_vtxScore;  
+	int dl_nTracks;
+	int dl_nSecTracks; 
+	int dl_nShowers;
+	int dl_nSecShowers;		
+	bool dl_vertex_contained;
+
+	//--------------------//
+
+	// distance between different reco vertices
+
+	double pd_wc_vtx_dist;
+	double pd_gl_vtx_dist;	
+	double pd_dl_vtx_dist;
+	double wc_gl_vtx_dist;
+	double wc_dl_vtx_dist;	
+	double gl_dl_vtx_dist;	
 
 	//--------------------//
 
@@ -293,14 +487,19 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("wc_kine_pio_phi_2",&wc_kine_pio_phi_2);
 	tree->Branch("wc_match_isFC",&wc_match_isFC);
 	tree->Branch("wc_kine_pio_flag",&wc_kine_pio_flag);
+	tree->Branch("wc_numu_cc_flag",&wc_numu_cc_flag);	
 	tree->Branch("wc_kine_particle_type",&wc_kine_particle_type);
 	tree->Branch("wc_kine_energy_particle",&wc_kine_energy_particle);
 
+	tree->Branch("nspacepoints",&nspacepoints);
 	tree->Branch("trecchargeblob_spacepoints_x",&trecchargeblob_spacepoints_x);	
 	tree->Branch("trecchargeblob_spacepoints_y",&trecchargeblob_spacepoints_y);	
 	tree->Branch("trecchargeblob_spacepoints_z",&trecchargeblob_spacepoints_z);	
 	tree->Branch("trecchargeblob_spacepoints_q",&trecchargeblob_spacepoints_q);	
-	tree->Branch("trecchargeblob_spacepoints_real_cluster_id",&trecchargeblob_spacepoints_real_cluster_id);						
+	tree->Branch("trecchargeblob_spacepoints_real_cluster_id",&trecchargeblob_spacepoints_real_cluster_id);
+	tree->Branch("sp_q_median",&sp_q_median);
+	tree->Branch("photon_q_median",&photon_q_median);
+	tree->Branch("neutron_q_median",&neutron_q_median);							
 
 	tree->Branch("Run",&Run);
 	tree->Branch("SubRun",&SubRun);
@@ -330,7 +529,19 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("bkg_1pi0_Np_Nn_Npipm_X",&bkg_1pi0_Np_Nn_Npipm_X);	
 	tree->Branch("bkg_1pi0_Nmh_X",&bkg_1pi0_Nmh_X);
 	tree->Branch("bkg_1pi0_Nl_X",&bkg_1pi0_Nl_X);
-	tree->Branch("bkg_other",&bkg_other);						
+	tree->Branch("bkg_other",&bkg_other);
+
+	tree->Branch("truth_contains_neutron",&truth_contains_neutron);
+	tree->Branch("reco_contains_neutron",&reco_contains_neutron);
+	tree->Branch("truth_contains_proton",&truth_contains_proton);
+	tree->Branch("reco_contains_proton",&reco_contains_proton);
+	tree->Branch("truth_contains_proton_or_neutron",&truth_contains_proton_or_neutron);
+	tree->Branch("reco_contains_proton_or_neutron",&reco_contains_proton_or_neutron);	
+
+	tree->Branch("true_sum_neutron_ke",&true_sum_neutron_ke);	
+	tree->Branch("true_neutron_ke",&true_neutron_ke);
+	tree->Branch("true_sum_proton_ke",&true_sum_proton_ke);
+	tree->Branch("true_proton_ke",&true_proton_ke);		
 	
 	tree->Branch("All_UBGenie", &All_UBGenie);
 	tree->Branch("AxFFCCQEshape_UBGenie", &AxFFCCQEshape_UBGenie);
@@ -371,6 +582,40 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Vertex_X",&Vertex_X);
 	tree->Branch("Vertex_Y",&Vertex_Y);
 	tree->Branch("Vertex_Z",&Vertex_Z);
+	tree->Branch("wc_vertex_contained",&wc_vertex_contained);
+
+	//--------------------//
+
+	tree->Branch("pd_vertex_x",&pd_vertex_x);
+	tree->Branch("pd_vertex_y",&pd_vertex_y);
+	tree->Branch("pd_vertex_z",&pd_vertex_z);
+	tree->Branch("pd_vertex_contained",&pd_vertex_contained);
+
+	tree->Branch("pd_slcng2mip", &pd_slcng2mip);
+	tree->Branch("pd_slcng2hip", &pd_slcng2hip);
+	tree->Branch("pd_slcng2shr", &pd_slcng2shr);
+	tree->Branch("pd_slcng2mcl", &pd_slcng2mcl);
+	tree->Branch("pd_slcng2dfs", &pd_slcng2dfs);
+	tree->Branch("pd_slcng2bkg", &pd_slcng2bkg);
+	tree->Branch("pd_clung2mip", &pd_clung2mip);
+	tree->Branch("pd_clung2hip", &pd_clung2hip);
+	tree->Branch("pd_clung2shr", &clung2shr);
+	tree->Branch("pd_clung2mcl", &pd_clung2mcl);
+	tree->Branch("pd_clung2dfs", &pd_clung2dfs);
+	tree->Branch("pd_clung2bkg", &pd_clung2bkg);
+	tree->Branch("pd_pfng2semlabel", &pd_pfng2semlabel);
+	tree->Branch("pd_pfng2mipfrac", &pd_pfng2mipfrac);
+	tree->Branch("pd_pfng2hipfrac", &pd_pfng2hipfrac);
+	tree->Branch("pd_pfng2shrfrac", &pd_pfng2shrfrac);
+	tree->Branch("pd_pfng2mclfrac", &pd_pfng2mclfrac);
+	tree->Branch("pd_pfng2dfsfrac", &pd_pfng2dfsfrac);
+	tree->Branch("pd_pfng2bkgfrac", &pd_pfng2bkgfrac);
+	tree->Branch("pd_pfng2mipavrg", &pd_pfng2mipavrg);
+	tree->Branch("pd_pfng2hipavrg", &pd_pfng2hipavrg);
+	tree->Branch("pd_pfng2shravrg", &pd_pfng2shravrg);
+	tree->Branch("pd_pfng2mclavrg", &pd_pfng2mclavrg);
+	tree->Branch("pd_pfng2dfsavrg", &pd_pfng2dfsavrg);
+	tree->Branch("pd_pfng2bkgavrg", &pd_pfng2bkgavrg);	
 		
 	//--------------------//
 
@@ -378,12 +623,16 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	tree->Branch("wc_reco_g1_id",&wc_reco_g1_id);
 	tree->Branch("wc_reco_g2_id",&wc_reco_g2_id);	
+	tree->Branch("wc_larpid_process",&wc_reco_larpid_process);
 	tree->Branch("wc_reco_mother",&wc_reco_mother);
 	tree->Branch("wc_reco_p",&wc_reco_p);
 	tree->Branch("wc_reco_start",&wc_reco_start);
 	tree->Branch("wc_reco_end",&wc_reco_end);
 	tree->Branch("wc_reco_pdg",&wc_reco_pdg);
-	tree->Branch("wc_reco_id",&wc_reco_id);	
+	tree->Branch("wc_reco_id",&wc_reco_id);
+	
+	tree->Branch("wc_temp_g1_id",&wc_temp_g1_id);	
+	tree->Branch("wc_temp_g2_id",&wc_temp_g2_id);					
 
 	//--------------------//
 
@@ -395,7 +644,8 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("reco_pi0_p",&reco_pi0_p);	
 	tree->Branch("reco_pi0_phi",&reco_pi0_phi);
 	tree->Branch("reco_pi0_costheta",&reco_pi0_costheta);
-	tree->Branch("reco_cm_costheta",&reco_cm_costheta);	
+	tree->Branch("reco_cm_costheta",&reco_cm_costheta);
+	tree->Branch("reco_deltapt",&reco_deltapt);		
 	tree->Branch("reco_pi0_invmass",&reco_pi0_invmass);		
 
 	//--------------------//
@@ -405,12 +655,18 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("reco_g1_p",&reco_g1_p);	
 	tree->Branch("reco_g1_phi",&reco_g1_phi);
 	tree->Branch("reco_g1_costheta",&reco_g1_costheta);
+	tree->Branch("reco_g1_length",&reco_g1_length);
+	tree->Branch("reco_g1_length_x",&reco_g1_length_x);
+	tree->Branch("reco_g1_length_y",&reco_g1_length_y);
+	tree->Branch("reco_g1_length_z",&reco_g1_length_z);				
 	tree->Branch("g1_start_x",&g1_start_x);
 	tree->Branch("g1_start_y",&g1_start_y);			
 	tree->Branch("g1_start_z",&g1_start_z);
+	tree->Branch("g1_start_contained",&g1_start_contained);
 	tree->Branch("g1_end_x",&g1_end_x);
 	tree->Branch("g1_end_y",&g1_end_y);			
 	tree->Branch("g1_end_z",&g1_end_z);	
+	tree->Branch("g1_end_contained",&g1_end_contained);
 
 	//--------------------//
 
@@ -418,17 +674,30 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	tree->Branch("reco_g2_p",&reco_g2_p);	
 	tree->Branch("reco_g2_phi",&reco_g2_phi);
-	tree->Branch("reco_g2_costheta",&reco_g2_costheta);	
+	tree->Branch("reco_g2_costheta",&reco_g2_costheta);
+	tree->Branch("reco_g2_length",&reco_g2_length);	
+	tree->Branch("reco_g2_length_x",&reco_g2_length_x);	
+	tree->Branch("reco_g2_length_y",&reco_g2_length_y);
+	tree->Branch("reco_g2_length_z",&reco_g2_length_z);				
 	tree->Branch("g2_start_x",&g2_start_x);
 	tree->Branch("g2_start_y",&g2_start_y);			
 	tree->Branch("g2_start_z",&g2_start_z);
+	tree->Branch("g2_start_contained",&g2_start_contained);
 	tree->Branch("g2_end_x",&g2_end_x);
 	tree->Branch("g2_end_y",&g2_end_y);			
 	tree->Branch("g2_end_z",&g2_end_z);	
+	tree->Branch("g2_end_contained",&g2_end_contained);
 
-	tree->Branch("two_shower_start_dist",&two_shower_start_dist);	
+	tree->Branch("two_shower_start_dist",&two_shower_start_dist);
+	tree->Branch("two_shower_end_dist",&two_shower_end_dist);	
+	tree->Branch("flipped_showers",&flipped_showers);		
 	
 	//--------------------//
+
+	tree->Branch("neutron_truthMatch_p",&neutron_truthMatch_p);
+	tree->Branch("proton_truthMatch_p",&proton_truthMatch_p);	
+	tree->Branch("neutron_truthMatch_ke",&neutron_truthMatch_ke);
+	tree->Branch("proton_truthMatch_ke",&proton_truthMatch_ke);		
 
 	tree->Branch("g1_truthMatch_pdg",&g1_truthMatch_pdg);
 	tree->Branch("g1_truthMatch_p",&g1_truthMatch_p);
@@ -444,20 +713,60 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("g2_truthMatch_py",&g2_truthMatch_py);
 	tree->Branch("g2_truthMatch_pz",&g2_truthMatch_pz);
 	tree->Branch("g2_truthMatch_costheta",&g2_truthMatch_costheta);
-	tree->Branch("g2_truthMatch_phi",&g2_truthMatch_phi);		
+	tree->Branch("g2_truthMatch_phi",&g2_truthMatch_phi);
+	
+	tree->Branch("wc_primary_proton_counter",&wc_primary_proton_counter);
+	tree->Branch("wc_primary_muon_counter",&wc_primary_muon_counter);
+	tree->Branch("wc_primary_charged_pion_counter",&wc_primary_charged_pion_counter);
+	tree->Branch("wc_primary_electron_counter",&wc_primary_electron_counter);
+	tree->Branch("wc_primary_photon_counter",&wc_primary_photon_counter);
+	tree->Branch("wc_primary_neutron_counter",&wc_primary_neutron_counter);
+	tree->Branch("wc_primary_neutral_pion_counter",&wc_primary_neutral_pion_counter);
+
+	tree->Branch("wc_secondary_proton_counter",&wc_secondary_proton_counter);
+	tree->Branch("wc_secondary_muon_counter",&wc_secondary_muon_counter);
+	tree->Branch("wc_secondary_charged_pion_counter",&wc_secondary_charged_pion_counter);
+	tree->Branch("wc_secondary_electron_counter",&wc_secondary_electron_counter);
+	tree->Branch("wc_secondary_photon_counter",&wc_secondary_photon_counter);
+	tree->Branch("wc_secondary_neutron_counter",&wc_secondary_neutron_counter);
+	tree->Branch("wc_secondary_neutral_pion_counter",&wc_secondary_neutral_pion_counter);	
+	
+	tree->Branch("wc_nshowers",&wc_nshowers);
+	tree->Branch("wc_nshowers_0MeV",&wc_nshowers_0MeV);	
+	tree->Branch("wc_nshowers_20MeV",&wc_nshowers_20MeV);		
+	tree->Branch("wc_nmuontracks",&wc_nmuontracks);
+	tree->Branch("wc_nprotontracks",&wc_nprotontracks);
+	tree->Branch("wc_npiontracks",&wc_npiontracks);
+
+	tree->Branch("wc_shw_sp_n_good_showers",&wc_shw_sp_n_good_showers);	
+	tree->Branch("wc_shw_sp_n_20mev_showers",&wc_shw_sp_n_20mev_showers);
+	tree->Branch("wc_shw_sp_n_br1_showers",&wc_shw_sp_n_br1_showers);
+	tree->Branch("wc_shw_sp_n_br2_showers",&wc_shw_sp_n_br2_showers);
+	tree->Branch("wc_shw_sp_n_br3_showers",&wc_shw_sp_n_br3_showers);
+	tree->Branch("wc_shw_sp_n_br4_showers",&wc_shw_sp_n_br4_showers);
+	tree->Branch("wc_shw_sp_n_20br1_showers",&wc_shw_sp_n_20br1_showers);
 
 	//--------------------//
 
 	// Blip info
 
+	tree->Branch("ngood_blips",&ngood_blips);	
 	tree->Branch("nBlips_saved",&nBlips_saved);
+	tree->Branch("Blip_g1_cos_alpha",&Blip_g1_cos_alpha);
+	tree->Branch("Blip_g2_cos_alpha",&Blip_g2_cos_alpha);
+	tree->Branch("Blip_vt_cos_alpha",&Blip_vt_cos_alpha);		
+	tree->Branch("Good_blip_ds",&Good_blip_ds);
+	tree->Branch("Blip_dx",&Blip_dx);
+	tree->Branch("Blip_dw",&Blip_dw);	
 	tree->Branch("Blip_x",&Blip_x);
 	tree->Branch("Blip_y",&Blip_y);
 	tree->Branch("Blip_z",&Blip_z);
 	tree->Branch("Blip_energy",&Blip_energy);
+	tree->Branch("Good_blip_energy",&Good_blip_energy);	
 	tree->Branch("Blip_charge",&Blip_charge);
 	tree->Branch("Blip_nplanes",&Blip_nplanes);
 	tree->Branch("Blip_proxtrkdist",&Blip_proxtrkdist);
+	tree->Branch("Good_blip_proxtrkdist",&Good_blip_proxtrkdist);	
 	tree->Branch("Blip_proxtrkid",&Blip_proxtrkid);
 	tree->Branch("Blip_touchtrk",&Blip_touchtrk);
 	tree->Branch("Blip_touchtrkid",&Blip_touchtrkid);
@@ -467,8 +776,30 @@ void mcc9_10_neutrino_selection::Loop() {
 	tree->Branch("Blip_pl0_bydeadwire",&Blip_pl0_bydeadwire);
 	tree->Branch("Blip_pl1_bydeadwire",&Blip_pl1_bydeadwire);
 	tree->Branch("Blip_pl2_bydeadwire",&Blip_pl2_bydeadwire);
+	tree->Branch("Blip_true_pdg",&Blip_true_pdg);
 	tree->Branch("Blip_true_g4id",&Blip_true_g4id);	
 	tree->Branch("Blip_true_energy",&Blip_true_energy);
+	tree->Branch("n_blip_pd_vtx_25cm",&n_blip_pd_vtx_25cm);
+	tree->Branch("n_blip_pd_vtx_50cm",&n_blip_pd_vtx_50cm);
+	tree->Branch("n_blip_pd_vtx_100cm",&n_blip_pd_vtx_100cm);	
+	tree->Branch("n_blip_pd_vtx_25cm_g1_anticone",&n_blip_pd_vtx_25cm_g1_anticone);
+	tree->Branch("n_blip_pd_vtx_50cm_g1_anticone",&n_blip_pd_vtx_50cm_g1_anticone);
+	tree->Branch("n_blip_pd_vtx_100cm_g1_anticone",&n_blip_pd_vtx_100cm_g1_anticone);	
+	tree->Branch("n_blip_pd_vtx_25cm_g1_cone",&n_blip_pd_vtx_25cm_g1_cone);
+	tree->Branch("n_blip_pd_vtx_50cm_g1_cone",&n_blip_pd_vtx_50cm_g1_cone);
+	tree->Branch("n_blip_pd_vtx_100cm_g1_cone",&n_blip_pd_vtx_100cm_g1_cone);
+	tree->Branch("n_blip_pd_vtx_25cm_g2_anticone",&n_blip_pd_vtx_25cm_g2_anticone);
+	tree->Branch("n_blip_pd_vtx_50cm_g2_anticone",&n_blip_pd_vtx_50cm_g2_anticone);
+	tree->Branch("n_blip_pd_vtx_100cm_g2_anticone",&n_blip_pd_vtx_100cm_g2_anticone);	
+	tree->Branch("n_blip_pd_vtx_25cm_g2_cone",&n_blip_pd_vtx_25cm_g2_cone);
+	tree->Branch("n_blip_pd_vtx_50cm_g2_cone",&n_blip_pd_vtx_50cm_g2_cone);
+	tree->Branch("n_blip_pd_vtx_100cm_g2_cone",&n_blip_pd_vtx_100cm_g2_cone);
+	tree->Branch("sum_reco_g1_blip_e_25cm",&sum_reco_g1_blip_e_25cm);	
+	tree->Branch("sum_reco_g2_blip_e_25cm",&sum_reco_g2_blip_e_25cm);	
+	tree->Branch("sum_reco_g1_blip_e_50cm",&sum_reco_g1_blip_e_50cm);	
+	tree->Branch("sum_reco_g2_blip_e_50cm",&sum_reco_g2_blip_e_50cm);	
+	tree->Branch("sum_reco_g1_blip_e_100cm",&sum_reco_g1_blip_e_100cm);	
+	tree->Branch("sum_reco_g2_blip_e_100cm",&sum_reco_g2_blip_e_100cm);							
 
 	//--------------------//
 
@@ -476,9 +807,64 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	tree->Branch("pd_generation_v",&pd_generation_v);
 	tree->Branch("pd_trk_score_v",&pd_trk_score_v);
+	tree->Branch("pd_shr_score",&pd_shr_score);	
 	tree->Branch("pd_trk_llr_pid_score_v",&pd_trk_llr_pid_score_v);
 	tree->Branch("pd_reco_track_count",&pd_reco_track_count);
 	tree->Branch("pd_reco_shower_count",&pd_reco_shower_count);
+	tree->Branch("pd_reco_secondary_track_count",&pd_reco_secondary_track_count);
+	tree->Branch("pd_reco_secondary_shower_count",&pd_reco_secondary_shower_count);	
+
+	//--------------------//
+
+	// glee
+
+	tree->Branch("gl_trackstub_candidate_veto_score",&gl_trackstub_candidate_veto_score);	
+	tree->Branch("gl_trackstub_num_candidates",&gl_trackstub_num_candidates);
+	tree->Branch("gl_reco_vertex_x",&gl_reco_vertex_x);
+	tree->Branch("gl_reco_vertex_y",&gl_reco_vertex_y);
+	tree->Branch("gl_reco_vertex_z",&gl_reco_vertex_z);	
+	tree->Branch("gl_vertex_contained",&gl_vertex_contained);
+	tree->Branch("gl_sss_num_candidates",&gl_sss_num_candidates);
+	tree->Branch("gl_reco_asso_showers",&gl_reco_asso_showers);
+	tree->Branch("gl_reco_asso_tracks",&gl_reco_asso_tracks);							
+
+	//--------------------//
+
+	// dl lantern
+
+	tree->Branch("dl_foundVertex",&dl_foundVertex);
+	tree->Branch("dl_vtxX",&dl_vtxX);
+	tree->Branch("dl_vtxY",&dl_vtxY);
+	tree->Branch("dl_vtxZ",&dl_vtxZ);
+	tree->Branch("dl_vtxScore",&dl_vtxScore);
+	tree->Branch("dl_nTracks",&dl_nTracks);
+	tree->Branch("dl_nSecTracks",&dl_nSecTracks);
+	tree->Branch("dl_nShowers",&dl_nShowers);
+	tree->Branch("dl_nSecShowers",&dl_nSecShowers);	
+	tree->Branch("dl_vertex_contained",&dl_vertex_contained);			
+	
+	//--------------------//
+
+	// distance between different reco vertices
+
+	tree->Branch("pd_wc_vtx_dist",&pd_wc_vtx_dist);
+	tree->Branch("pd_gl_vtx_dist",&pd_gl_vtx_dist);
+	tree->Branch("pd_dl_vtx_dist",&pd_dl_vtx_dist);
+	tree->Branch("wc_gl_vtx_dist",&wc_gl_vtx_dist);
+	tree->Branch("wc_dl_vtx_dist",&wc_dl_vtx_dist);
+	tree->Branch("gl_dl_vtx_dist",&gl_dl_vtx_dist);		
+
+	//--------------------//
+
+	// playground
+
+	double wc_n_veto_nonprim_score; 
+	double wc_n_veto_all_score;
+	double wc_n_veto_score;	
+
+	tree->Branch("wc_n_veto_nonprim_score",&wc_n_veto_nonprim_score);
+	tree->Branch("wc_n_veto_all_score",&wc_n_veto_all_score);
+	tree->Branch("wc_n_veto_score",&wc_n_veto_score);			
 
 	//--------------------//
 
@@ -685,10 +1071,26 @@ void mcc9_10_neutrino_selection::Loop() {
 
 	wc->SetBranchAddress("nc_pio_score", &nc_pio_score, &b_nc_pio_score);
 	wc->SetBranchAddress("numu_score", &numu_score, &b_numu_score);
+	wc->SetBranchAddress("numu_cc_flag", &numu_cc_flag, &b_numu_cc_flag);	
 	wc->SetBranchAddress("single_photon_numu_score", &single_photon_numu_score, &b_single_photon_numu_score);
 	wc->SetBranchAddress("single_photon_other_score", &single_photon_other_score, &b_single_photon_other_score);
 	wc->SetBranchAddress("single_photon_ncpi0_score", &single_photon_ncpi0_score, &b_single_photon_ncpi0_score);
 	wc->SetBranchAddress("single_photon_nue_score", &single_photon_nue_score, &b_single_photon_nue_score);
+	wc->SetBranchAddress("shw_sp_n_good_showers", &shw_sp_n_good_showers, &b_shw_sp_n_good_showers);
+	wc->SetBranchAddress("shw_sp_n_20mev_showers", &shw_sp_n_20mev_showers, &b_shw_sp_n_20mev_showers);
+	wc->SetBranchAddress("shw_sp_n_br1_showers", &shw_sp_n_br1_showers, &b_shw_sp_n_br1_showers);
+	wc->SetBranchAddress("shw_sp_n_br2_showers", &shw_sp_n_br2_showers, &b_shw_sp_n_br2_showers);
+	wc->SetBranchAddress("shw_sp_n_br3_showers", &shw_sp_n_br3_showers, &b_shw_sp_n_br3_showers);
+	wc->SetBranchAddress("shw_sp_n_br4_showers", &shw_sp_n_br4_showers, &b_shw_sp_n_br4_showers);
+	wc->SetBranchAddress("shw_sp_n_20br1_showers", &shw_sp_n_20br1_showers, &b_shw_sp_n_20br1_showers);	
+
+	if (fLabel.Contains("ben_neutron_bdt")) {
+
+		wc->SetBranchAddress("n_veto_all_score", &n_veto_all_score, &b_n_veto_all_score);
+		wc->SetBranchAddress("n_veto_nonprim_score", &n_veto_nonprim_score, &b_n_veto_nonprim_score);
+		wc->SetBranchAddress("n_veto_score", &n_veto_score, &b_n_veto_score);
+		
+	}
 
 	wc_kine->SetBranchAddress("kine_pio_flag", &kine_pio_flag, &b_kine_pio_flag);	
 	wc_kine->SetBranchAddress("kine_pio_vtx_dis", &kine_pio_vtx_dis, &b_kine_pio_vtx_dis);
@@ -707,10 +1109,16 @@ void mcc9_10_neutrino_selection::Loop() {
 	wc_pfeval->SetBranchAddress("reco_nuvtxX", &reco_nuvtxX, &b_reco_nuvtxX);	
 	wc_pfeval->SetBranchAddress("reco_nuvtxY", &reco_nuvtxY, &b_reco_nuvtxY);	
 	wc_pfeval->SetBranchAddress("reco_nuvtxZ", &reco_nuvtxZ, &b_reco_nuvtxZ);	
+	wc_pfeval->SetBranchAddress("reco_larpid_proccess", reco_larpid_proccess, &b_reco_larpid_proccess);	
 
 	if (string(fLabel).find("Overlay") != std::string::npos) {
 
-		wc_pfeval->SetBranchAddress("truth_Ntrack", &truth_Ntrack, &b_truth_Ntrack);			
+		wc_pfeval->SetBranchAddress("truth_Ntrack", &truth_Ntrack, &b_truth_Ntrack);	
+		wc_pfeval->SetBranchAddress("truth_NprimPio", &truth_NprimPio, &b_truth_NprimPio);		
+		wc_pfeval->SetBranchAddress("truth_isCC", &truth_isCC, &b_truth_isCC);	
+		wc_pfeval->SetBranchAddress("truth_vtxX", &truth_vtxX, &b_truth_vtxX);
+		wc_pfeval->SetBranchAddress("truth_vtxY", &truth_vtxY, &b_truth_vtxY);
+		wc_pfeval->SetBranchAddress("truth_vtxZ", &truth_vtxZ, &b_truth_vtxZ);								
 		wc_pfeval->SetBranchAddress("truth_id", &truth_id, &b_truth_id);		
 		wc_pfeval->SetBranchAddress("truth_pdg", &truth_pdg, &b_truth_pdg);
 		wc_pfeval->SetBranchAddress("truth_startMomentum", truth_startMomentum, &b_truth_startMomentum);	
@@ -749,6 +1157,33 @@ void mcc9_10_neutrino_selection::Loop() {
 	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_real_cluster_id", &Trecchargeblob_spacepoints_real_cluster_id, &b_Trecchargeblob_spacepoints_real_cluster_id);
 	wc_sp->SetBranchAddress("Trecchargeblob_spacepoints_sub_cluster_id", &Trecchargeblob_spacepoints_sub_cluster_id, &b_Trecchargeblob_spacepoints_sub_cluster_id);			
 
+	//--------------------//
+
+	//glee ttree
+
+	gl_vtx->SetBranchAddress("trackstub_candidate_veto_score", &trackstub_candidate_veto_score, &b_trackstub_candidate_veto_score);
+	gl_vtx->SetBranchAddress("trackstub_num_candidates", &trackstub_num_candidates, &b_trackstub_num_candidates);
+	gl_vtx->SetBranchAddress("reco_vertex_x", &reco_vertex_x, &b_reco_vertex_x);
+	gl_vtx->SetBranchAddress("reco_vertex_y", &reco_vertex_y, &b_reco_vertex_y);
+	gl_vtx->SetBranchAddress("reco_vertex_z", &reco_vertex_z, &b_reco_vertex_z);
+   	gl_vtx->SetBranchAddress("sss_num_candidates", &sss_num_candidates, &b_sss_num_candidates);	
+   	gl_vtx->SetBranchAddress("reco_asso_showers", &reco_asso_showers, &b_reco_asso_showers);
+   	gl_vtx->SetBranchAddress("reco_asso_tracks", &reco_asso_tracks, &b_reco_asso_tracks);		
+
+	//--------------------//
+
+	// dl lantern
+
+	dl->SetBranchAddress("foundVertex", &foundVertex, &b_foundVertex);
+	dl->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
+	dl->SetBranchAddress("vtxY", &vtxY, &b_vtxY);
+	dl->SetBranchAddress("vtxZ", &vtxZ, &b_vtxZ);
+	dl->SetBranchAddress("vtxScore", &vtxScore, &b_vtxScore);	
+	dl->SetBranchAddress("nTracks", &nTracks, &b_nTracks);
+	dl->SetBranchAddress("trackIsSecondary", trackIsSecondary, &b_trackIsSecondary);
+	dl->SetBranchAddress("nShowers", &nShowers, &b_nShowers);
+	dl->SetBranchAddress("showerIsSecondary", showerIsSecondary, &b_showerIsSecondary);		
+
 	//--------------------//			
 
 	for (Long64_t jentry=0; jentry<nentries;jentry++) {
@@ -773,7 +1208,27 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		Long64_t wc_pfeval_i_entry = wc_pfeval->LoadTree(jentry);
 		wc_pfeval_nb = wc_pfeval->GetEntry(jentry);   
-		wc_pfeval_nbytes += wc_pfeval_nb;	
+		wc_pfeval_nbytes += wc_pfeval_nb;
+		
+		Long64_t wc_sp_i_entry = wc_sp->LoadTree(jentry);
+		wc_sp_nb = wc_sp->GetEntry(jentry);   
+		wc_sp_nbytes += wc_sp_nb;		
+
+		Long64_t gl_vtx_i_entry = gl_vtx->LoadTree(jentry);
+		gl_vtx_nb = gl_vtx->GetEntry(jentry);   
+		gl_vtx_nbytes += gl_vtx_nb;
+		
+		Long64_t dl_i_entry = dl->LoadTree(jentry);
+		dl_nb = dl->GetEntry(jentry);   
+		dl_nbytes += dl_nb;		
+
+		//--------------------//			
+
+		if (string(fLabel).find("nonNCpi0Overlay") != std::string::npos) {		
+
+			if (truth_NprimPio == 1 && truth_isCC == 0 && tools.inAV(truth_vtxX,truth_vtxY,truth_vtxZ) ) { continue; }
+
+		}
 
 		//--------------------//			
 
@@ -813,6 +1268,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		int heavy_meson_tagging = 0, SigmaTagging = 0, LambdaTagging = 0;
 		int PhotonTagging = 0, LeptonTagging = 0 , cluster_tagging = 0;
 		int neutron_tagging = 0;
+		true_neutron_ke.clear();	
+		true_proton_ke.clear();				
 
 		std::vector<int> Pi0ID; Pi0ID.clear();		
 		int NMCParticles = mc_pdg->size();
@@ -831,6 +1288,9 @@ void mcc9_10_neutrino_selection::Loop() {
 
 			// Loop over the MCParticles and determine the populations
 
+			double temp_true_sum_neutron_ke = 0.;
+			double temp_true_sum_proton_ke = 0.;			
+
 			for (int i_mc = 0; i_mc < NMCParticles; i_mc++) {
 
 				// MC truth information for the final-state primary particles
@@ -847,6 +1307,8 @@ void mcc9_10_neutrino_selection::Loop() {
 
 						double E = TMath::Sqrt( TMath::Power(MCParticleMomentum,2.) + TMath::Power(ProtonMass_GeV,2.) );
 						double ke = E - ProtonMass_GeV;
+						true_proton_ke.push_back(ke);
+						temp_true_sum_proton_ke += ke;						
 
 						// proton kinetic energy threshold
 						if ( ke > proton_ke_thres ) {
@@ -928,6 +1390,8 @@ void mcc9_10_neutrino_selection::Loop() {
 
 						double E = TMath::Sqrt( TMath::Power(MCParticleMomentum,2.) + TMath::Power(NeutronMass_GeV,2.) );
 						double ke = E - NeutronMass_GeV;
+						true_neutron_ke.push_back(ke);
+						temp_true_sum_neutron_ke += ke;
 
 						// proton kinetic energy threshold
 						if ( ke > neutron_ke_thres ) {
@@ -943,6 +1407,9 @@ void mcc9_10_neutrino_selection::Loop() {
 				} // End of the demand stable final state particles and primary interactions
 
 			} // end of the loop over the MCParticles
+
+			true_sum_neutron_ke = temp_true_sum_neutron_ke;			
+			true_sum_proton_ke = temp_true_sum_proton_ke;
 
 		}
 
@@ -1008,6 +1475,15 @@ void mcc9_10_neutrino_selection::Loop() {
 		
 		}
 
+		if (neutron_tagging > 0) { truth_contains_neutron = 1; }
+		else { truth_contains_neutron = 0; }
+
+		if (ProtonTagging > 0) { truth_contains_proton = 1; }
+		else { truth_contains_proton = 0; }		
+
+		if (neutron_tagging > 0 || ProtonTagging > 0) { truth_contains_proton_or_neutron = 1; }
+		else { truth_contains_proton_or_neutron = 0; }		
+
 		//--------------------//
 
 		// Weights for systematics
@@ -1048,9 +1524,17 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// Now getting to the reco part
 
+		// wc vertex
+
 		Vertex_X.clear();
 		Vertex_Y.clear();
 		Vertex_Z.clear();
+
+		// pandora vertex
+
+		pd_vertex_x.clear();
+		pd_vertex_y.clear();
+		pd_vertex_z.clear();		
 
 		//--------------------//
 
@@ -1062,7 +1546,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		reco_pi0_p.clear();	
 		reco_pi0_phi.clear();
 		reco_pi0_costheta.clear();
-		reco_cm_costheta.clear();			
+		reco_cm_costheta.clear();	
+		reco_deltapt.clear();					
 		reco_pi0_invmass.clear();			
 
 		//--------------------//
@@ -1080,11 +1565,22 @@ void mcc9_10_neutrino_selection::Loop() {
 		reco_g2_p.clear();	
 		reco_g2_phi.clear();
 		reco_g2_costheta.clear();
+
+		proton_truthMatch_p.clear();
+		neutron_truthMatch_p.clear();	
+		proton_truthMatch_ke.clear();
+		neutron_truthMatch_ke.clear();				
 		
 		//--------------------//
 
 		// Blips
 
+		Blip_g1_cos_alpha.clear();
+		Blip_g2_cos_alpha.clear();
+		Blip_vt_cos_alpha.clear();						
+		Good_blip_ds.clear();
+		Blip_dx.clear();
+		Blip_dw.clear();		
 		Blip_x.clear();
 		Blip_y.clear();
 		Blip_z.clear();
@@ -1101,6 +1597,7 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_pl0_bydeadwire.clear();
 		Blip_pl1_bydeadwire.clear();
 		Blip_pl2_bydeadwire.clear();
+		Blip_true_pdg.clear();
 		Blip_true_g4id.clear();
 		Blip_true_energy.clear();	
 		
@@ -1113,6 +1610,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		trecchargeblob_spacepoints_z.clear();
 		trecchargeblob_spacepoints_q.clear();
 		trecchargeblob_spacepoints_real_cluster_id.clear();			
+		photon_q_median.clear();
+		neutron_q_median.clear();		
 
 		//--------------------//
 
@@ -1122,6 +1621,7 @@ void mcc9_10_neutrino_selection::Loop() {
 		wc_kine_energy_particle.clear();
 		wc_reco_pdg.clear();
 		wc_reco_id.clear();
+		wc_reco_larpid_process.clear();
 		wc_reco_mother.clear();
 		wc_reco_p.clear();
 		wc_reco_start.clear();
@@ -1129,7 +1629,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		//--------------------//
 
-		// Pandora info
+		// pandora info
 
 		pd_generation_v.clear();
 		pd_trk_score_v.clear();
@@ -1137,13 +1637,44 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		//--------------------//
 
+		// pandora nugraph	
+		
+		pd_pfng2semlabel.clear();
+		pd_pfng2mipfrac.clear();
+		pd_pfng2hipfrac.clear();
+		pd_pfng2shrfrac.clear();
+		pd_pfng2mclfrac.clear();
+		pd_pfng2dfsfrac.clear();
+		pd_pfng2bkgfrac.clear();
+		pd_pfng2mipavrg.clear();
+		pd_pfng2hipavrg.clear();
+		pd_pfng2shravrg.clear();
+		pd_pfng2mclavrg.clear();
+		pd_pfng2dfsavrg.clear();
+		pd_pfng2bkgavrg.clear();		
+
+		//--------------------//
+
+		// glee
+
+		gl_trackstub_candidate_veto_score.clear();
+
+		//--------------------//
+
 		// Requirement for two well-reconstructed
 		// and fully contained objects associated
 		// with neutrino vertex
 
+		// Ben's NCpi0 selection
+
 		if (kine_pio_energy_1 <= 0) { continue; }
 		if (kine_pio_energy_2 <= 0) { continue; }
 		if (match_isFC != 1) { continue; }
+		if (nc_pio_score < 1.816) { continue; }
+
+		wc_kine_pio_energy_1 = kine_pio_energy_1;
+		wc_kine_pio_energy_2 = kine_pio_energy_2;
+		wc_match_isFC = match_isFC;		
 
 		//--------------------//
 
@@ -1163,6 +1694,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		wc_kine_pio_flag = kine_pio_flag;
 		wc_numu_score = numu_score;
+		wc_numu_cc_flag = numu_cc_flag;		
 		wc_nc_pio_score = nc_pio_score;
 		wc_kine_pio_vtx_dis = kine_pio_vtx_dis;
 		wc_kine_pio_energy_1 = kine_pio_energy_1;	
@@ -1183,12 +1715,20 @@ void mcc9_10_neutrino_selection::Loop() {
 		// WC reconstructed Vertex
 
 		TVector3 VertexLocation(reco_nuvtxX,reco_nuvtxY,reco_nuvtxZ);
-
-		//if (!tools.inFVVector(VertexLocation) ) { continue; }
+		wc_vertex_contained = tools.inFVVector(VertexLocation);
 
 		Vertex_X.push_back(reco_nuvtxX);
 		Vertex_Y.push_back(reco_nuvtxY);
 		Vertex_Z.push_back(reco_nuvtxZ);
+
+		// pd reco vertex
+
+		TVector3 pd_VertexLocation(reco_nu_vtx_sce_x,reco_nu_vtx_sce_y,reco_nu_vtx_sce_z);
+		pd_vertex_contained = tools.inFVVector(pd_VertexLocation);		
+
+		pd_vertex_x.push_back(reco_nu_vtx_sce_x);
+		pd_vertex_y.push_back(reco_nu_vtx_sce_y);
+		pd_vertex_z.push_back(reco_nu_vtx_sce_z);		
 
 		MCParticle_Mode = interaction;
 
@@ -1250,9 +1790,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		reco_pi0_p_gammas.push_back(pio.Rho()/1e3);	//GeV
 
 		double cos_theta_cm = (Egamma1*0.001-Egamma2*0.001)/TMath::Abs(pio.Rho()/1e3);
-		reco_cm_costheta.push_back(cos_theta_cm);		
-		
-		if ( pio.CosTheta() <  pi0_costheta_thres) { continue; }
+		reco_cm_costheta.push_back(cos_theta_cm);	
+		reco_deltapt.push_back(pio.Pt()/1e3); // GeV
 
 		//--------------------//
 
@@ -1267,6 +1806,7 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		for (int i = 0; i < reco_Ntrack; i++) {
 
+			wc_reco_larpid_process.push_back(reco_larpid_proccess[i]);			
 			wc_reco_mother.push_back(reco_mother[i]);
 			wc_reco_pdg.push_back(reco_pdg[i]);
 			wc_reco_id.push_back(reco_id[i]);
@@ -1283,8 +1823,6 @@ void mcc9_10_neutrino_selection::Loop() {
 			// only primaries and photons
 
 			if (reco_pdg[i] == 11) {
-
-				//cout << "kine_pio_energy_1*0.001 = " << kine_pio_energy_1*0.001 << "  kine_pio_energy_2*0.001 = " << kine_pio_energy_2*0.001 << "  reco_startMomentum[i][3] = " << reco_startMomentum[i][3] << endl; 
 
 				if ( TMath::Abs(kine_pio_energy_1*0.001 - reco_startMomentum[i][3])/(kine_pio_energy_1*0.001) < 0.02 ) { 
 					
@@ -1306,7 +1844,10 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		// make sure that the pfeval-to-gamma matching is done correctly
 		if (temp_g1_id == -1) { continue; }
-		if (temp_g2_id == -1) { continue; }		
+		if (temp_g2_id == -1) { continue; }
+
+		wc_temp_g1_id = temp_g1_id;
+		wc_temp_g2_id = temp_g2_id;		
 
 		g1_start_x = reco_startXYZT[temp_g1_id][0];
 		g1_start_y = reco_startXYZT[temp_g1_id][1];
@@ -1322,12 +1863,33 @@ void mcc9_10_neutrino_selection::Loop() {
 
 		g2_end_x = reco_endXYZT[temp_g2_id][0];
 		g2_end_y = reco_endXYZT[temp_g2_id][1];
-		g2_end_z = reco_endXYZT[temp_g2_id][2];			
+		g2_end_z = reco_endXYZT[temp_g2_id][2];		
 		
 		TVector3 g1_start(g1_start_x,g1_start_y,g1_start_z);
-		TVector3 g2_start(g2_start_x,g2_start_y,g2_start_z);		
+		TVector3 g2_start(g2_start_x,g2_start_y,g2_start_z);	
+		TVector3 g1_end(g1_end_x,g1_end_y,g1_end_z);
+		TVector3 g2_end(g2_end_x,g2_end_y,g2_end_z);
+		
+		g1_start_contained = tools.inFVVector(g1_start);
+		g2_start_contained = tools.inFVVector(g2_start);
+		g1_end_contained = tools.inFVVector(g1_end);
+		g2_end_contained = tools.inFVVector(g2_end);
 
-		two_shower_start_dist = (g1_start - g2_start).Mag();	
+		two_shower_start_dist = (g1_start - g2_start).Mag();
+		two_shower_end_dist = (g1_end - g2_end).Mag();
+		flipped_showers = (two_shower_start_dist > two_shower_end_dist)?1:0;			
+
+		TVector3 g1_length = (g1_end-g1_start);
+		reco_g1_length = g1_length.Mag();
+		reco_g1_length_x = TMath::Abs(g1_length.X());
+		reco_g1_length_y = TMath::Abs(g1_length.Y());	
+		reco_g1_length_z = TMath::Abs(g1_length.Z());				
+
+		TVector3 g2_length = (g2_end-g2_start);		
+		reco_g2_length = g2_length.Mag();	
+		reco_g2_length_x = TMath::Abs(g2_length.X());
+		reco_g2_length_y = TMath::Abs(g2_length.Y());	
+		reco_g2_length_z = TMath::Abs(g2_length.Z());		
 
 		//--------------------//
 
@@ -1392,6 +1954,8 @@ void mcc9_10_neutrino_selection::Loop() {
 		// Blips
 
 		nBlips_saved = nblips_saved;
+		Blip_dx = *blip_dx;
+		Blip_dw = *blip_dw;		
 		Blip_x = *blip_x;
 		Blip_y = *blip_y ;
 		Blip_z = *blip_z;
@@ -1408,8 +1972,495 @@ void mcc9_10_neutrino_selection::Loop() {
 		Blip_pl0_bydeadwire = *blip_pl0_bydeadwire;
 		Blip_pl1_bydeadwire = *blip_pl1_bydeadwire;
 		Blip_pl2_bydeadwire = *blip_pl2_bydeadwire;
+		Blip_true_pdg = *blip_true_pdg;
 		Blip_true_g4id = *blip_true_g4id;
 		Blip_true_energy = *blip_true_energy;	
+
+		int counter_blip_pd_vtx_25cm = 0;
+		int counter_blip_pd_vtx_50cm = 0;	
+		int counter_blip_pd_vtx_100cm = 0;	
+
+		int counter_blip_pd_vtx_25cm_g1_anticone = 0;
+		int counter_blip_pd_vtx_50cm_g1_anticone = 0;	
+		int counter_blip_pd_vtx_100cm_g1_anticone = 0;	
+		int counter_blip_pd_vtx_25cm_g1_cone = 0;
+		int counter_blip_pd_vtx_50cm_g1_cone = 0;	
+		int counter_blip_pd_vtx_100cm_g1_cone = 0;
+		
+		int counter_blip_pd_vtx_25cm_g2_anticone = 0;
+		int counter_blip_pd_vtx_50cm_g2_anticone = 0;	
+		int counter_blip_pd_vtx_100cm_g2_anticone = 0;	
+		int counter_blip_pd_vtx_25cm_g2_cone = 0;
+		int counter_blip_pd_vtx_50cm_g2_cone = 0;	
+		int counter_blip_pd_vtx_100cm_g2_cone = 0;		
+
+		double temp_sum_blip_e_25cm_g1_anticone = 0;
+		double temp_sum_blip_e_25cm_g2_anticone = 0;
+		double temp_sum_blip_e_50cm_g1_anticone = 0;
+		double temp_sum_blip_e_50cm_g2_anticone = 0;
+		double temp_sum_blip_e_100cm_g1_anticone = 0;
+		double temp_sum_blip_e_100cm_g2_anticone = 0;	
+		
+		int good_reco_blips = 0;
+		int temp_proton_blips = 0;
+
+		for (int ib = 0; ib < (int)(blip_x->size()); ib++) {
+
+			// ensure good blip quality
+			if ( 
+				blip_nplanes->at(ib) > 1 && // 2 & 3 matched-planes (3D-blips)
+				blip_touchtrk->at(ib) == 0 && // no blips touching tracks
+				blip_pl2_bydeadwire->at(ib) == 0 && // no blips by dead wires in collection plane (pl2)
+				blip_proxtrkdist->at(ib) > 10 && //distance to closest track > 10 [cm] // mitigate cosmic induced blips
+				blip_energy->at(ib) > 0.6 // reco blip energy [MeVee]
+		
+			) {
+
+				TVector3 blip(blip_x->at(ib), blip_y->at(ib), blip_z->at(ib));
+
+				// requirement for blip containment
+				if ( tools.inFVVector(blip) ) { 
+
+					Good_blip_energy.push_back(blip_energy->at(ib));
+					Good_blip_proxtrkdist.push_back(blip_proxtrkdist->at(ib));	
+					
+					float ds = TMath::Sqrt( TMath::Power(blip_dx->at(ib),2) + TMath::Power(blip_dw->at(ib),2) );
+					Good_blip_ds.push_back(ds);
+
+					TVector3 pd_vertex_blip_vec = blip - pd_VertexLocation;
+					double dist = pd_vertex_blip_vec.Mag();
+					double g1_blip_dist = (blip - g1_start).Mag();
+					double g2_blip_dist = (blip - g2_start).Mag();								
+
+					double temp_blip_energy = blip_energy->at(ib);
+					good_reco_blips++;
+
+					double g1_cosalpha = cos_alpha(g1_start,g1.Vect(),blip);
+					double g2_cosalpha = cos_alpha(g2_start,g2.Vect(),blip);
+					double vt_cosalpha = cos_alpha(pd_VertexLocation,pd_VertexLocation,blip);				
+
+					Blip_g1_cos_alpha.push_back(g1_cosalpha);
+					Blip_g2_cos_alpha.push_back(g2_cosalpha);
+					Blip_vt_cos_alpha.push_back(vt_cosalpha);								
+
+					// distances in cm
+					if (dist < 25) { counter_blip_pd_vtx_25cm++; }
+					if (dist < 50) { counter_blip_pd_vtx_50cm++; }			
+					if (dist < 100) { counter_blip_pd_vtx_100cm++; }
+
+					// electron-like blips
+					if ( IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,25) ) { 
+						
+						counter_blip_pd_vtx_25cm_g1_anticone++; 
+						temp_sum_blip_e_25cm_g1_anticone += temp_blip_energy; 
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,25) ) { counter_blip_pd_vtx_25cm_g1_cone++; }	
+
+					if ( IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,50) ) { 
+						
+						counter_blip_pd_vtx_50cm_g1_anticone++; 
+						temp_sum_blip_e_50cm_g1_anticone += temp_blip_energy;					
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,50) ) { counter_blip_pd_vtx_50cm_g1_cone++; }
+
+					if ( IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,100) ) { 
+						
+						counter_blip_pd_vtx_100cm_g1_anticone++; 
+						temp_sum_blip_e_100cm_g1_anticone += temp_blip_energy;					
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g1_start,g1.Vect(),blip,100) ) { counter_blip_pd_vtx_100cm_g1_cone++; }		
+					
+					if ( IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,25) ) { 
+						
+						counter_blip_pd_vtx_25cm_g2_anticone++; 
+						temp_sum_blip_e_25cm_g2_anticone += temp_blip_energy;					
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,25) ) { counter_blip_pd_vtx_25cm_g2_cone++; }	
+
+					if ( IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,50) ) { 
+						
+						counter_blip_pd_vtx_50cm_g2_anticone++; 
+						temp_sum_blip_e_50cm_g2_anticone += temp_blip_energy;					
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,50) ) { counter_blip_pd_vtx_50cm_g2_cone++; }	
+
+					if ( IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,100) ) { 
+						
+						counter_blip_pd_vtx_100cm_g2_anticone++; 
+						temp_sum_blip_e_100cm_g2_anticone += temp_blip_energy;					
+					
+					}
+
+					if ( !IsWithinSphereOutsideConic(g2_start,g2.Vect(),blip,100) ) { counter_blip_pd_vtx_100cm_g2_cone++; }	
+					
+					// proton-like blips
+					if ( 
+						IsBackTrackedBlip(g1_blip_dist,g1_cosalpha) || 
+						IsBackTrackedBlip(g2_blip_dist,g2_cosalpha) ||
+						IsBackTrackedBlip(dist,vt_cosalpha)
+					) {
+
+						temp_proton_blips++;
+					}
+
+				} // ensure good blip quality
+
+			} // end of blip containment
+
+		}
+
+		ngood_blips = good_reco_blips;
+		
+		n_blip_pd_vtx_25cm = counter_blip_pd_vtx_25cm;
+		n_blip_pd_vtx_50cm = counter_blip_pd_vtx_50cm;	
+		n_blip_pd_vtx_100cm = counter_blip_pd_vtx_100cm;
+
+		n_blip_pd_vtx_25cm_g1_anticone = counter_blip_pd_vtx_25cm_g1_anticone;
+		n_blip_pd_vtx_50cm_g1_anticone = counter_blip_pd_vtx_50cm_g1_anticone;	
+		n_blip_pd_vtx_100cm_g1_anticone = counter_blip_pd_vtx_100cm_g1_anticone;
+		n_blip_pd_vtx_25cm_g1_cone = counter_blip_pd_vtx_25cm_g1_cone;
+		n_blip_pd_vtx_50cm_g1_cone = counter_blip_pd_vtx_50cm_g1_cone;	
+		n_blip_pd_vtx_100cm_g1_cone = counter_blip_pd_vtx_100cm_g1_cone;	
+		
+		n_blip_pd_vtx_25cm_g2_anticone = counter_blip_pd_vtx_25cm_g2_anticone;
+		n_blip_pd_vtx_50cm_g2_anticone = counter_blip_pd_vtx_50cm_g2_anticone;	
+		n_blip_pd_vtx_100cm_g2_anticone = counter_blip_pd_vtx_100cm_g2_anticone;
+		n_blip_pd_vtx_25cm_g2_cone = counter_blip_pd_vtx_25cm_g2_cone;
+		n_blip_pd_vtx_50cm_g2_cone = counter_blip_pd_vtx_50cm_g2_cone;	
+		n_blip_pd_vtx_100cm_g2_cone = counter_blip_pd_vtx_100cm_g2_cone;	
+
+		sum_reco_g1_blip_e_25cm = temp_sum_blip_e_25cm_g1_anticone;
+		sum_reco_g1_blip_e_50cm = temp_sum_blip_e_50cm_g1_anticone;
+		sum_reco_g1_blip_e_100cm = temp_sum_blip_e_100cm_g1_anticone;
+		
+		sum_reco_g2_blip_e_25cm = temp_sum_blip_e_25cm_g2_anticone;
+		sum_reco_g2_blip_e_50cm = temp_sum_blip_e_50cm_g2_anticone;
+		sum_reco_g2_blip_e_100cm = temp_sum_blip_e_100cm_g2_anticone;	
+		
+		// based on Diego's study
+		// https://microboone-docdb.fnal.gov/cgi-bin/sso/RetrieveFile?docid=45208&filename=Oxford_CM%20_BlipBased_0pNp_0nNn_classification_1gInc_events%2BProbing_1g0p_excess_wBlips_v3.pdf&version=2
+		if (
+			(n_blip_pd_vtx_100cm_g1_anticone > 10 || sum_reco_g1_blip_e_100cm > 8) || 
+			(n_blip_pd_vtx_100cm_g2_anticone > 10 || sum_reco_g2_blip_e_100cm > 8) ) 
+		{ reco_contains_neutron = 1; }
+		else { reco_contains_neutron = 0; }
+
+		if (temp_proton_blips != 0) { reco_contains_proton = 1; }
+		else { reco_contains_proton = 0; }
+
+		if (reco_contains_neutron == 1 || reco_contains_proton == 1) { reco_contains_proton_or_neutron = 1; }
+		else { reco_contains_proton_or_neutron = 0; }
+
+		//----------------------------------------//	
+		
+		// wc spacepoints
+
+		nspacepoints = Trecchargeblob_spacepoints_x->size();
+		trecchargeblob_spacepoints_x = *Trecchargeblob_spacepoints_x;
+		trecchargeblob_spacepoints_y = *Trecchargeblob_spacepoints_y;
+		trecchargeblob_spacepoints_z = *Trecchargeblob_spacepoints_z;
+		trecchargeblob_spacepoints_q = *Trecchargeblob_spacepoints_q;
+		trecchargeblob_spacepoints_real_cluster_id = *Trecchargeblob_spacepoints_real_cluster_id;			
+		sp_q_median = get_median_vector(trecchargeblob_spacepoints_q);		
+
+		//--------------------//
+
+		// Loop over primary pfparticles
+		// Reject those events with protons above kinetic energy threshold
+		// The proton threshold can be located under NCpi0/generators/constants.h 
+
+		int primary_proton_counter = 0;
+		int primary_muon_counter = 0;
+		int primary_charged_pion_counter = 0;
+		int primary_electron_counter = 0;
+		int primary_photon_counter = 0;
+		int primary_neutron_counter = 0;
+		int primary_neutral_pion_counter = 0;
+
+		int secondary_proton_counter = 0;
+		int secondary_muon_counter = 0;
+		int secondary_charged_pion_counter = 0;
+		int secondary_electron_counter = 0;
+		int secondary_photon_counter = 0;
+		int secondary_neutron_counter = 0;
+		int secondary_neutral_pion_counter = 0;
+
+		int pfps = reco_Ntrack;
+
+		for (int ipfp = 0; ipfp < pfps; ipfp++ ) {
+
+			// only primaries (mother = 0) 
+			if (reco_mother[ipfp] == 0) {
+
+				TVector3 v_mom(reco_startMomentum[ipfp][0], reco_startMomentum[ipfp][1], reco_startMomentum[ipfp][2]); 
+				double mom = v_mom.Mag();
+
+				// Only proton candidates
+				if (reco_pdg[ipfp] == ProtonPdg) {
+
+					double e = TMath::Sqrt( mom*mom + ProtonMass_GeV * ProtonMass_GeV);
+					double ke = e - ProtonMass_GeV;
+					if (ke > proton_ke_thres) { primary_proton_counter++; }
+
+				} // end of the primary protons
+
+				// Only muon candidates
+				else if (reco_pdg[ipfp] == MuonPdg) {
+
+					if (mom > 0.) { primary_muon_counter++; }
+					
+				} // end of the primary muons
+
+				// Only charged pion candidates
+				else if (reco_pdg[ipfp] == AbsChargedPionPdg) {
+
+					if (mom > 0.) { primary_charged_pion_counter++; }
+					
+				} // end of the primary charged pions
+
+				// Only neutral pion candidates
+				else if (reco_pdg[ipfp] == NeutralPionPdg) {
+
+					if (mom > 0.) { primary_neutral_pion_counter++; }
+					
+				} // end of the primary neutral pions
+
+				// Only electron candidates
+				else if (reco_pdg[ipfp] == ElectronPdg) {
+
+					if (mom > 0.07) { primary_electron_counter++; }
+										
+				} // end of the primary charged pions
+
+				// Only photon candidates
+				else if (reco_pdg[ipfp] == PhotonPdg) {
+
+					if (mom > 0.07) { primary_photon_counter++; }
+										
+				} // end of the primary photons
+
+				// Only neutron candidates
+				else if (reco_pdg[ipfp] == NeutronPdg) {
+
+					double e = TMath::Sqrt( mom*mom + NeutronMass_GeV * NeutronMass_GeV);
+					double ke = e - NeutronMass_GeV;						
+					//cout << "neutron mom = " << mom << " ke = " << ke << " bkg_1n_0p_1pi0_X = " << bkg_1n_0p_1pi0_X << endl;
+					//if (mom > 0.) { primary_neutron_counter++; }
+					if (ke > 0.01) { primary_neutron_counter++; }						
+										
+				} // end of the primary neutrons
+
+				else { 
+						
+					cout << "primary non proton/muon/charged pion/electron candidate with pdg = " << reco_pdg[ipfp] << " run = " << Run << "  subrun = " << SubRun << " event = " << Event << endl; 
+					
+				}
+
+			} else {
+
+				// secondary particles (mother != 0)
+				int mother = reco_mother[ipfp];
+
+				// loop over the secondary particles
+				for (int ipfp_s = 0; ipfp_s < pfps; ipfp_s++ ) {
+
+					if ( mother == reco_id[ipfp_s] ) {
+
+						int secondary_pdg = reco_pdg[ipfp_s]; 
+
+						//secondary protons
+						if ( TMath::Abs(secondary_pdg) == ProtonPdg) {
+
+							TVector3 v_mom(reco_startMomentum[ipfp_s][0], reco_startMomentum[ipfp_s][1], reco_startMomentum[ipfp_s][2]); 
+							double mom = v_mom.Mag();
+							double e = TMath::Sqrt( mom*mom + ProtonMass_GeV * ProtonMass_GeV);
+							double ke = e - ProtonMass_GeV;
+
+							if (ke > proton_ke_thres) { secondary_proton_counter++; }
+
+						}
+
+						//secondary charged pions
+						else if ( TMath::Abs(secondary_pdg) == AbsChargedPionPdg) {
+
+							secondary_charged_pion_counter++;
+							
+						}
+
+						//secondary neutral pions
+						else if ( TMath::Abs(secondary_pdg) == NeutralPionPdg) {
+
+							secondary_neutral_pion_counter++;
+							
+						}
+
+						//secondary muons
+						else if ( TMath::Abs(secondary_pdg) == MuonPdg) {
+
+							secondary_muon_counter++;
+							
+						}
+
+						//secondary electrons
+						else if ( TMath::Abs(secondary_pdg) == ElectronPdg) {
+
+							secondary_electron_counter++;
+							
+						}
+
+						//secondary photons
+						else if ( TMath::Abs(secondary_pdg) == PhotonPdg) {
+
+							secondary_photon_counter++;
+
+							vector<double> temp_photon_sp_q;																		
+
+							// store the relevant spacepoints for the candidate proton
+							int nsps = trecchargeblob_spacepoints_x.size();								
+							for (int isp = 0; isp < nsps; isp++) {
+
+								if (trecchargeblob_spacepoints_real_cluster_id.at(isp) == wc_reco_id.at(ipfp)) { 
+									
+									temp_photon_sp_q.push_back(trecchargeblob_spacepoints_q.at(isp));
+
+								}
+
+							}	
+							
+							photon_q_median.push_back( get_median_vector(temp_photon_sp_q) );
+							
+						}
+
+						//secondary neutrons
+						else if ( TMath::Abs(secondary_pdg) == NeutronPdg) {
+
+							secondary_neutron_counter++;
+
+							vector<double> temp_neutron_sp_q;																		
+
+							// store the relevant spacepoints for the candidate proton
+							int nsps = trecchargeblob_spacepoints_x.size();
+							for (int isp = 0; isp < nsps; isp++) {
+
+								if (trecchargeblob_spacepoints_real_cluster_id.at(isp) == wc_reco_id.at(ipfp)) { 
+									
+									temp_neutron_sp_q.push_back(trecchargeblob_spacepoints_q.at(isp));
+
+								}
+
+							}
+							
+							neutron_q_median.push_back( get_median_vector(temp_neutron_sp_q) );					
+							
+						}
+
+						else { 
+						
+							cout << "secondary non proton/muon/charged pion/electron candidate with pdg = " << reco_pdg[ipfp_s] << " run = " << Run << "  subrun = " << SubRun << " event = " << Event << endl; 
+							
+						}
+
+					} // end of grabbing the correct secondary particle
+
+				} // end of the loop over the secondary particles
+
+			}
+
+		}
+
+		wc_primary_proton_counter = primary_proton_counter;
+		wc_primary_muon_counter = primary_muon_counter;
+		wc_primary_charged_pion_counter = primary_charged_pion_counter;
+		wc_primary_electron_counter = primary_electron_counter;
+		wc_primary_photon_counter = primary_photon_counter;
+		wc_primary_neutron_counter = primary_neutron_counter;
+		wc_primary_neutral_pion_counter = primary_neutral_pion_counter;
+
+		wc_secondary_proton_counter = secondary_proton_counter;
+		wc_secondary_muon_counter = secondary_muon_counter;
+		wc_secondary_charged_pion_counter = secondary_charged_pion_counter;
+		wc_secondary_electron_counter = secondary_electron_counter;
+		wc_secondary_photon_counter = secondary_photon_counter;
+		wc_secondary_neutron_counter = secondary_neutron_counter;
+		wc_secondary_neutral_pion_counter = secondary_neutral_pion_counter;		
+
+		//--------------------//
+
+		// Reject events that do not have two showers
+
+		int nshowers = 0;
+		int nshowers_0MeV = 0;
+		int nshowers_20MeV = 0;				
+		int nmuontracks = 0;
+		int nprotontracks = 0;
+		int npiontracks = 0;
+
+		for(int i=0; i < (int)kine_energy_particle->size(); i++) {
+
+			int pdgcode = kine_particle_type->at(i);
+
+			if( TMath::Abs(pdgcode) == ElectronPdg && kine_energy_particle->at(i) > 10) { // KE in MeV
+					
+				nshowers++;
+
+			}
+
+			if( TMath::Abs(pdgcode) == ElectronPdg && kine_energy_particle->at(i) > 0) { // KE in MeV
+					
+				nshowers_0MeV++;
+
+			}	
+			
+			if( TMath::Abs(pdgcode) == ElectronPdg && kine_energy_particle->at(i) > 0) { // KE in MeV
+					
+				nshowers_20MeV++;
+
+			}				
+
+			else if( TMath::Abs(pdgcode) == ProtonPdg && kine_energy_particle->at(i) > 10) { // KE in MeV
+					
+				nprotontracks++;
+
+			}			
+				
+			else if( TMath::Abs(pdgcode) == MuonPdg && kine_energy_particle->at(i) > 10) { // KE in MeV
+					
+				nmuontracks++;
+
+			}	
+				
+			else if( TMath::Abs(pdgcode) == AbsChargedPionPdg && kine_energy_particle->at(i) > 10) { // KE in MeV
+					
+				npiontracks++;
+
+			}	
+
+		}		
+
+		wc_nshowers_0MeV = nshowers_0MeV;	
+		wc_nshowers_20MeV = nshowers_20MeV;				
+		wc_nshowers = nshowers;
+		wc_nmuontracks = nmuontracks;
+		wc_nprotontracks = nprotontracks;
+		wc_npiontracks = npiontracks;	
+		
+		wc_shw_sp_n_good_showers = shw_sp_n_good_showers;
+		wc_shw_sp_n_20mev_showers = shw_sp_n_20mev_showers;
+		wc_shw_sp_n_br1_showers = shw_sp_n_br1_showers;
+		wc_shw_sp_n_br2_showers = shw_sp_n_br2_showers;
+		wc_shw_sp_n_br3_showers = shw_sp_n_br3_showers;
+		wc_shw_sp_n_br4_showers = shw_sp_n_br4_showers;
+		wc_shw_sp_n_20br1_showers = shw_sp_n_20br1_showers;		
 
 		//--------------------//
 
@@ -1418,27 +2469,48 @@ void mcc9_10_neutrino_selection::Loop() {
 		pd_trk_score_v = *trk_score_v;
 		pd_generation_v = *pfp_generation_v;
 		pd_trk_llr_pid_score_v = *trk_llr_pid_score_v;
+		pd_shr_score = shr_score;
 
 		int reco_shower_count = 0;
 		int reco_track_count = 0;
 
+		int reco_secondary_shower_count = 0;
+		int reco_secondary_track_count = 0;		
+
 		for ( int p = 0; p < n_pfps; ++p ) {
 
-			// Only check direct neutrino daughters (generation == 2)
+			// check direct neutrino daughters (generation == 2)
+			// and secondary particles 
 
  			unsigned int generation = pfp_generation_v->at( p );
-			if ( generation != 2u ) continue;
 
-			float tscore = trk_score_v->at( p );
-			if ( tscore <= TRACK_SCORE_CUT ) { ++reco_shower_count; }
-			else { ++reco_track_count; }
+			if ( generation == 2u ) {
+
+				float tscore = trk_score_v->at( p );
+				if ( tscore <= TRACK_SCORE_CUT ) { ++reco_shower_count; }
+				else { ++reco_track_count; }
   
+			}
+
+			if ( generation == 3u ) {
+
+				float sec_tscore = trk_score_v->at( p );
+				if ( sec_tscore <= TRACK_SCORE_CUT ) { ++reco_secondary_shower_count; }
+				else { ++reco_secondary_track_count; }
+  
+			}			
+
+
 		}
 
 		pd_reco_track_count = reco_track_count;
 		pd_reco_shower_count = reco_shower_count;
 
+		pd_reco_secondary_track_count = reco_secondary_track_count;
+		pd_reco_secondary_shower_count = reco_secondary_shower_count;		
+
 		if (pd_reco_track_count > 0) { continue; }
+		if ( pio.CosTheta() <  pi0_costheta_thres) { continue; }		
 
 		candidate_events++;
 
@@ -1458,15 +2530,51 @@ void mcc9_10_neutrino_selection::Loop() {
 		else if (bkg_1pi0_Nl_X) { counter_bkg_1pi0_Nl_X++; }										
 		else { counter_bkg_other++; }	
 
-		//----------------------------------------//	
+		//--------------------//
 		
-		// wc spacepoints
+		// pandora nugraph
 
-		trecchargeblob_spacepoints_x = *Trecchargeblob_spacepoints_x;
-		trecchargeblob_spacepoints_y = *Trecchargeblob_spacepoints_y;
-		trecchargeblob_spacepoints_z = *Trecchargeblob_spacepoints_z;
-		trecchargeblob_spacepoints_q = *Trecchargeblob_spacepoints_q;
-		trecchargeblob_spacepoints_real_cluster_id = *Trecchargeblob_spacepoints_real_cluster_id;			
+		pd_slcng2mip = slcng2mip;
+		pd_slcng2hip = slcng2hip;
+		pd_slcng2shr = slcng2shr;
+		pd_slcng2mcl = slcng2mcl;
+		pd_slcng2dfs = slcng2dfs;
+		pd_slcng2bkg = slcng2bkg;
+		pd_clung2mip = clung2mip;
+		pd_clung2hip = clung2hip;
+		pd_clung2shr = clung2shr;
+		pd_clung2mcl = clung2mcl;
+		pd_clung2dfs = clung2dfs;
+		pd_clung2bkg = clung2bkg;
+		pd_pfng2semlabel = *pfng2semlabel;
+		pd_pfng2mipfrac = *pfng2mipfrac;
+		pd_pfng2hipfrac = *pfng2hipfrac;
+		pd_pfng2shrfrac = *pfng2shrfrac;
+		pd_pfng2mclfrac = *pfng2mclfrac;
+		pd_pfng2dfsfrac = *pfng2dfsfrac;
+		pd_pfng2bkgfrac = *pfng2bkgfrac;
+		pd_pfng2mipavrg = *pfng2mipavrg;
+		pd_pfng2hipavrg = *pfng2hipavrg;
+		pd_pfng2shravrg = *pfng2shravrg;
+		pd_pfng2mclavrg = *pfng2mclavrg;
+		pd_pfng2dfsavrg = *pfng2dfsavrg;
+		pd_pfng2bkgavrg = *pfng2bkgavrg;			
+
+		//--------------------//
+
+		// glee
+
+		gl_trackstub_candidate_veto_score = *trackstub_candidate_veto_score;	
+		gl_trackstub_num_candidates = trackstub_num_candidates;
+		gl_reco_vertex_x = reco_vertex_x;
+		gl_reco_vertex_y = reco_vertex_y;
+		gl_reco_vertex_z = reco_vertex_z;	
+		
+		TVector3 gl_vertex(reco_vertex_x, reco_vertex_y, reco_vertex_z);
+		gl_vertex_contained = tools.inFVVector(gl_vertex);
+		gl_sss_num_candidates = sss_num_candidates;
+		gl_reco_asso_showers = reco_asso_showers;
+		gl_reco_asso_tracks = reco_asso_tracks;				
 
 		//--------------------//
 
@@ -1475,59 +2583,150 @@ void mcc9_10_neutrino_selection::Loop() {
 		if (string(fLabel).find("Overlay") != std::string::npos) {
 
 			// loop over the reco objects
-			// but use only the two photon indices
 			for (int i = 0; i < reco_Ntrack; i++) {
 
-				if ( !(i == wc_reco_g1_id || i == wc_reco_g2_id) ) { continue; }
-
 				int id = reco_truthMatch_id[i];
-				int truthMatch_id = -1;
+				int truthMatch_id = -1;				
 
-				// loop over the truth objects
-				for (int t = 0; t < truth_Ntrack; t++) {
+				// two photon candidates
+				if ( i == wc_reco_g1_id || i == wc_reco_g2_id ) {
 
-					if (truth_id[t] == id) {
+					// loop over the truth objects
+					// for the two photons
+					for (int t = 0; t < truth_Ntrack; t++) {
 
-						truthMatch_id = t;
-						break;
+						if (truth_id[t] == id) {
+
+							truthMatch_id = t;
+							break;
+
+						}
+						
+					} // end of the truth loop
+
+					if ( i == wc_reco_g1_id ) {
+
+						g1_truthMatch_pdg = truth_pdg[truthMatch_id];
+						g1_truthMatch_p = truth_startMomentum[truthMatch_id][3];
+
+						TVector3 g1_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
+						g1_truthMatch_px = g1_truthMatch_v.X();
+						g1_truthMatch_py = g1_truthMatch_v.Y();
+						g1_truthMatch_pz = g1_truthMatch_v.Z();
+						g1_truthMatch_costheta = g1_truthMatch_v.CosTheta();
+						g1_truthMatch_phi = g1_truthMatch_v.Phi(); // rad	
+
+					}
+
+					if ( i == wc_reco_g2_id ) {
+
+						g2_truthMatch_pdg = truth_pdg[truthMatch_id];
+						g2_truthMatch_p = truth_startMomentum[truthMatch_id][3];
+
+						TVector3 g2_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
+						g2_truthMatch_px = g2_truthMatch_v.X();
+						g2_truthMatch_py = g2_truthMatch_v.Y();
+						g2_truthMatch_pz = g2_truthMatch_v.Z();
+						g2_truthMatch_costheta = g2_truthMatch_v.CosTheta();
+						g2_truthMatch_phi = g2_truthMatch_v.Phi(); // rad	
 
 					}
 					
-				} // end of the truth loop
+				} // end of two-photon candidate case	
+			
+				else {
 
-				if ( i == wc_reco_g1_id ) {
+					// non-photon particles
+					for (int t = 0; t < truth_Ntrack; t++) {
 
-					g1_truthMatch_pdg = truth_pdg[truthMatch_id];
-					g1_truthMatch_p = truth_startMomentum[truthMatch_id][3];
+						// proton backtracking
+						if (truth_id[t] == id && truth_pdg[t] == ProtonPdg) {
 
-					TVector3 g1_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
-					g1_truthMatch_px = g1_truthMatch_v.X();
-					g1_truthMatch_py = g1_truthMatch_v.Y();
-					g1_truthMatch_pz = g1_truthMatch_v.Z();
-					g1_truthMatch_costheta = g1_truthMatch_v.CosTheta();
-					g1_truthMatch_phi = g1_truthMatch_v.Phi(); // rad	
+							double p = truth_startMomentum[t][3];
+							double ke = TMath::Sqrt( TMath::Power(ProtonMass_GeV,2.) + TMath::Power(p,2.) ) - ProtonMass_GeV;
+
+							proton_truthMatch_p.push_back(p);
+							proton_truthMatch_ke.push_back(ke);							
+							
+							break;
+
+						}
+
+						// neutron backtracking
+						if (truth_id[t] == id && truth_pdg[t] == NeutronPdg) {
+
+							double p = truth_startMomentum[t][3];
+							double ke = TMath::Sqrt( TMath::Power(NeutronMass_GeV,2.) + TMath::Power(p,2.) ) - NeutronMass_GeV;
+
+							neutron_truthMatch_p.push_back(truth_startMomentum[t][3]);
+							neutron_truthMatch_ke.push_back(ke);
+
+							break;
+
+						}					
+							
+					} // end of the truth loop
 
 				}
 
-				if ( i == wc_reco_g2_id ) {
-
-					g2_truthMatch_pdg = truth_pdg[truthMatch_id];
-					g2_truthMatch_p = truth_startMomentum[truthMatch_id][3];
-
-					TVector3 g2_truthMatch_v(truth_startMomentum[truthMatch_id][0], truth_startMomentum[truthMatch_id][1], truth_startMomentum[truthMatch_id][2]);
-					g2_truthMatch_px = g2_truthMatch_v.X();
-					g2_truthMatch_py = g2_truthMatch_v.Y();
-					g2_truthMatch_pz = g2_truthMatch_v.Z();
-					g2_truthMatch_costheta = g2_truthMatch_v.CosTheta();
-					g2_truthMatch_phi = g2_truthMatch_v.Phi(); // rad	
-
-				}				
-
-				//cout << "reco_pdg = " << reco_pdg[i] << "  truthMatch_id = " << truthMatch_id << " truth_pdg = " << truth_pdg[truthMatch_id] << endl;
-
-			}	
-		
+			}				
+				
 		} // end of backtracking 
+
+		//--------------------//
+		
+		// dl lantern
+
+		int counter_dl_secondary_tracks = 0;
+		int counter_dl_secondary_showers = 0;		
+
+		for (int idl = 0; idl < nTracks; idl++) {
+
+			if (trackIsSecondary[idl] == 1) { counter_dl_secondary_tracks++; }
+
+		}
+
+		for (int idl = 0; idl < nShowers; idl++) {
+
+			if (showerIsSecondary[idl] == 1) { counter_dl_secondary_showers++; }
+
+		}		
+
+		dl_foundVertex = foundVertex;
+		dl_vtxX = vtxX;
+		dl_vtxY = vtxY;
+		dl_vtxZ = vtxZ;
+		dl_vtxScore = vtxScore; 
+		dl_nTracks = nTracks;
+		dl_nShowers = nShowers;		 
+		dl_nSecTracks = counter_dl_secondary_tracks;
+		dl_nSecShowers = counter_dl_secondary_showers;
+
+		TVector3 dl_vertex(vtxX, vtxY, vtxZ);
+		dl_vertex_contained = tools.inFVVector(dl_vertex);
+
+		//--------------------//
+
+		// distance between different reco vertices
+
+		pd_wc_vtx_dist = (pd_VertexLocation - VertexLocation).Mag();
+		pd_gl_vtx_dist = (pd_VertexLocation - gl_vertex).Mag();
+		pd_dl_vtx_dist = (pd_VertexLocation - dl_vertex).Mag();
+		wc_gl_vtx_dist = (VertexLocation - gl_vertex).Mag();
+		wc_dl_vtx_dist = (VertexLocation - dl_vertex).Mag();
+		gl_dl_vtx_dist = (gl_vertex - dl_vertex).Mag();	
+
+		//--------------------//
+		
+		// playground
+
+		if (fLabel.Contains("ben_neutron_bdt")) {
+		
+			wc_n_veto_nonprim_score = n_veto_nonprim_score; 
+			wc_n_veto_all_score = n_veto_all_score;
+			wc_n_veto_score = n_veto_score;					
+
+		}
 
 		//--------------------//
 

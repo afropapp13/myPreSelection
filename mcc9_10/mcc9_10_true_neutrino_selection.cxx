@@ -103,6 +103,9 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	std::vector<int> pi0_MCParticle_EndContainment;
 	std::vector<int> pi0_MCParticle_Pdg;
 
+	std::vector<double> true_neutron_ke;
+	std::vector<double> true_proton_ke;		
+
 	//--------------------//
 
 	tree->Branch("Weight",&Weight);
@@ -158,6 +161,9 @@ void mcc9_10_true_neutrino_selection::Loop() {
 	tree->Branch("pi0_MCParticle_EndZ",&pi0_MCParticle_EndZ);
 	tree->Branch("pi0_MCParticle_EndContainment",&pi0_MCParticle_EndContainment);
 	tree->Branch("pi0_MCParticle_Pdg",&pi0_MCParticle_Pdg);
+
+	tree->Branch("true_neutron_ke",&true_neutron_ke);
+	tree->Branch("true_proton_ke",&true_proton_ke);			
 		
 	//--------------------//
 
@@ -380,6 +386,8 @@ void mcc9_10_true_neutrino_selection::Loop() {
 		pi0_MCParticle_EndZ.clear();
 		pi0_MCParticle_EndContainment.clear();
 		pi0_MCParticle_Pdg.clear();		
+		true_neutron_ke.clear();	
+		true_proton_ke.clear();			
 
 		//--------------------//
 
@@ -432,6 +440,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 					double E = TMath::Sqrt( TMath::Power(MCParticleMomentum,2.) + TMath::Power(ProtonMass_GeV,2.) );
 					double ke = E - ProtonMass_GeV;
+					true_proton_ke.push_back(ke);
 
 					// proton kinetic energy threshold
 					if ( ke > proton_ke_thres ) {
@@ -508,6 +517,7 @@ void mcc9_10_true_neutrino_selection::Loop() {
 
 					double E = TMath::Sqrt( TMath::Power(MCParticleMomentum,2.) + TMath::Power(NeutronMass_GeV,2.) );
 					double ke = E - NeutronMass_GeV;
+					true_neutron_ke.push_back(ke);
 
 					// proton kinetic energy threshold
 					if ( ke > neutron_ke_thres ) {

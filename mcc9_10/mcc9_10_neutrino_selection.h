@@ -40,7 +40,9 @@ public :
 	TTree* wc_kine;	   
 	TTree* wc_eval;  
 	TTree* wc_pfeval;    
-	TTree* wc_sp;   
+	TTree* wc_sp;
+	TTree* gl_vtx;     
+   TTree* dl; 
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 static constexpr Int_t kMaxweights = 4;   
@@ -69,6 +71,8 @@ static constexpr Int_t kMaxweights = 4;
    vector<float>   *blip_x;
    vector<float>   *blip_y;
    vector<float>   *blip_z;
+   vector<float>   *blip_dx;
+   vector<float>   *blip_dw;   
    vector<float>   *blip_energy;
    vector<float>   *blip_charge;
    vector<int>     *blip_nplanes;
@@ -82,6 +86,7 @@ static constexpr Int_t kMaxweights = 4;
    vector<bool>    *blip_pl0_bydeadwire;
    vector<bool>    *blip_pl1_bydeadwire;
    vector<bool>    *blip_pl2_bydeadwire;
+   vector<int>     *blip_true_pdg;
    vector<int>     *blip_true_g4id;
    vector<float>   *blip_true_energy;
    Float_t         dvtx;
@@ -358,17 +363,26 @@ static constexpr Int_t kMaxweights = 4;
    Int_t           slcng2shr;
    Int_t           slcng2mcl;
    Int_t           slcng2dfs;
+   Int_t           slcng2bkg;
    Int_t           clung2mip;
    Int_t           clung2hip;
    Int_t           clung2shr;
    Int_t           clung2mcl;
    Int_t           clung2dfs;
+   Int_t           clung2bkg;
    vector<int>     *pfng2semlabel;
    vector<float>   *pfng2mipfrac;
    vector<float>   *pfng2hipfrac;
    vector<float>   *pfng2shrfrac;
    vector<float>   *pfng2mclfrac;
    vector<float>   *pfng2dfsfrac;
+   vector<float>   *pfng2bkgfrac;
+   vector<float>   *pfng2mipavrg;
+   vector<float>   *pfng2hipavrg;
+   vector<float>   *pfng2shravrg;
+   vector<float>   *pfng2mclavrg;
+   vector<float>   *pfng2dfsavrg;
+   vector<float>   *pfng2bkgavrg;
    Float_t         pi0_mcgamma0_e;
    Float_t         pi0_mcgamma0_px;
    Float_t         pi0_mcgamma0_py;
@@ -597,18 +611,32 @@ static constexpr Int_t kMaxweights = 4;
    vector<float>   *trk_avg_deflection_stdev_v;
    vector<float>   *trk_avg_deflection_separation_mean_v;
    vector<int>     *trk_end_spacepoints_v;
+   Float_t         shr_score;   
 
+   Float_t         shw_sp_n_good_showers;
+   Float_t         shw_sp_n_20mev_showers;
+   Float_t         shw_sp_n_br1_showers;
+   Float_t         shw_sp_n_br2_showers;
+   Float_t         shw_sp_n_br3_showers;
+   Float_t         shw_sp_n_br4_showers;
+   Float_t         shw_sp_n_20br1_showers;     
   	Float_t         single_photon_numu_score;
 	Float_t         single_photon_other_score;
 	Float_t         single_photon_ncpi0_score;
 	Float_t         single_photon_nue_score;
 	int reco_Ntrack;
 	int truth_Ntrack;	
+	int truth_NprimPio;	   
+   Bool_t truth_isCC;     
+   Float_t         truth_vtxX;
+   Float_t         truth_vtxY;
+   Float_t         truth_vtxZ;   
 	Int_t truth_pdg[1500];  //[truth_Ntrack]
 	Int_t truth_id[1500];   //[truth_Ntrack]	
     Float_t truth_startMomentum[1500][4];   //[truth_Ntrack]	
 	float numu_score;	
 	float nc_pio_score;	
+	float numu_cc_flag;   
 	float kine_pio_vtx_dis;
 	float kine_pio_energy_1;	
 	float kine_pio_theta_1;	
@@ -622,6 +650,7 @@ static constexpr Int_t kMaxweights = 4;
 	float reco_nuvtxX;
 	float reco_nuvtxY;
 	float reco_nuvtxZ;
+   Int_t reco_larpid_proccess[129];   //[reco_Ntrack]   
 	vector<int> *kine_particle_type; // reco pdg
 	vector<float> *kine_energy_particle; // KE in MeV
 	Int_t reco_mother[500];   //[reco_Ntrack]
@@ -654,6 +683,31 @@ static constexpr Int_t kMaxweights = 4;
 	vector<double>  *Trecchargeblob_spacepoints_real_cluster_id;
 	vector<double>  *Trecchargeblob_spacepoints_sub_cluster_id;	 
 
+   // glee
+	int  trackstub_num_candidates;	   
+	vector<double>  *trackstub_candidate_veto_score;   
+   Double_t        reco_vertex_x;
+   Double_t        reco_vertex_y;
+   Double_t        reco_vertex_z;  
+   Int_t           sss_num_candidates;   
+   Int_t           reco_asso_showers;
+   Int_t           reco_asso_tracks;       
+
+   // dl lantern
+   Int_t           foundVertex;
+   Float_t         vtxX;
+   Float_t         vtxY;
+   Float_t         vtxZ;
+   Float_t         vtxScore;   
+   Int_t           nTracks;
+   Int_t           trackIsSecondary[25];   //[nTracks]
+   Int_t           nShowers;
+   Int_t           showerIsSecondary[25];   //[nShowers]
+
+   Float_t         n_veto_all_score;
+   Float_t         n_veto_nonprim_score;
+   Float_t         n_veto_score;   
+
    // List of branches 
    TBranch        *b_interaction_time_abs;   //!   
    TBranch        *b_selected;   //!
@@ -670,6 +724,8 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_blip_x;   //!
    TBranch        *b_blip_y;   //!
    TBranch        *b_blip_z;   //!
+   TBranch        *b_blip_dx;   //!
+   TBranch        *b_blip_dw;   //!   
    TBranch        *b_blip_energy;   //!
    TBranch        *b_blip_charge;   //!
    TBranch        *b_blip_nplanes;   //!
@@ -683,6 +739,7 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_blip_pl0_bydeadwire;   //!
    TBranch        *b_blip_pl1_bydeadwire;   //!
    TBranch        *b_blip_pl2_bydeadwire;   //!
+   TBranch        *b_blip_true_pdg;   //!
    TBranch        *b_blip_true_g4id;   //!
    TBranch        *b_blip_true_energy;   //!
    TBranch        *b_dvtx;   //!
@@ -968,17 +1025,26 @@ static constexpr Int_t kMaxweights = 4;
    TBranch        *b_slcng2shr;   //!
    TBranch        *b_slcng2mcl;   //!
    TBranch        *b_slcng2dfs;   //!
+   TBranch        *b_slcng2bkg;   //!
    TBranch        *b_clung2mip;   //!
    TBranch        *b_clung2hip;   //!
    TBranch        *b_clung2shr;   //!
    TBranch        *b_clung2mcl;   //!
    TBranch        *b_clung2dfs;   //!
+   TBranch        *b_clung2bkg;   //!
    TBranch        *b_pfng2semlabel;   //!
    TBranch        *b_pfng2mipfrac;   //!
    TBranch        *b_pfng2hipfrac;   //!
    TBranch        *b_pfng2shrfrac;   //!
    TBranch        *b_pfng2mclfrac;   //!
    TBranch        *b_pfng2dfsfrac;   //!
+   TBranch        *b_pfng2bkgfrac;   //!
+   TBranch        *b_pfng2mipavrg;   //!
+   TBranch        *b_pfng2hipavrg;   //!
+   TBranch        *b_pfng2shravrg;   //!
+   TBranch        *b_pfng2mclavrg;   //!
+   TBranch        *b_pfng2dfsavrg;   //!
+   TBranch        *b_pfng2bkgavrg;   //!
    TBranch        *b_pi0_mcgamma0_e;   //!
    TBranch        *b_pi0_mcgamma0_px;   //!
    TBranch        *b_pi0_mcgamma0_py;   //!
@@ -1212,10 +1278,16 @@ static constexpr Int_t kMaxweights = 4;
 	TBranch* b_single_photon_ncpi0_score;   //!
 	TBranch* b_single_photon_nue_score;   //!
 	TBranch* b_reco_Ntrack;
+	TBranch* b_numu_cc_flag;   
 	TBranch* b_truth_Ntrack;
+	TBranch* b_truth_NprimPio;
+	TBranch* b_truth_isCC;
+	TBranch* b_truth_vtxX;
+	TBranch* b_truth_vtxY;
+	TBranch* b_truth_vtxZ;               
 	TBranch* b_truth_pdg;
 	TBranch* b_truth_id;	
-    TBranch* b_truth_startMomentum;   //!		
+   TBranch* b_truth_startMomentum;   //!		
 	TBranch* b_numu_score;
 	TBranch* b_nc_pio_score;
 	TBranch* b_kine_pio_vtx_dis;
@@ -1231,6 +1303,7 @@ static constexpr Int_t kMaxweights = 4;
 	TBranch* b_reco_nuvtxX;
 	TBranch* b_reco_nuvtxY;
 	TBranch* b_reco_nuvtxZ;
+   TBranch* b_reco_larpid_proccess;   //!   
 	TBranch* b_kine_particle_type;
 	TBranch* b_kine_energy_particle;
 	TBranch* b_reco_mother;
@@ -1261,7 +1334,40 @@ static constexpr Int_t kMaxweights = 4;
 	TBranch        *b_Trecchargeblob_spacepoints_q;   //!
 	TBranch        *b_Trecchargeblob_spacepoints_cluster_id;   //!
 	TBranch        *b_Trecchargeblob_spacepoints_real_cluster_id;   //!
-	TBranch        *b_Trecchargeblob_spacepoints_sub_cluster_id;   //!	   
+	TBranch        *b_Trecchargeblob_spacepoints_sub_cluster_id;   //!	 
+   TBranch        *b_shr_score;   //!   
+   TBranch        *b_n_veto_all_score;   //!
+   TBranch        *b_n_veto_nonprim_score;   //!
+   TBranch        *b_n_veto_score;   //!   
+
+   TBranch        *b_shw_sp_n_good_showers;   //!
+   TBranch        *b_shw_sp_n_20mev_showers;   //!
+   TBranch        *b_shw_sp_n_br1_showers;   //!
+   TBranch        *b_shw_sp_n_br2_showers;   //!
+   TBranch        *b_shw_sp_n_br3_showers;   //!
+   TBranch        *b_shw_sp_n_br4_showers;   //!
+   TBranch        *b_shw_sp_n_20br1_showers;   //!   
+
+   // dl lantern
+   TBranch        *b_foundVertex;   //!
+   TBranch        *b_vtxX;   //!
+   TBranch        *b_vtxY;   //!
+   TBranch        *b_vtxZ;   //!
+   TBranch        *b_vtxScore;   //!   
+   TBranch        *b_nTracks;   //!
+   TBranch        *b_trackIsSecondary;   //!   
+   TBranch        *b_nShowers;   //!
+   TBranch        *b_showerIsSecondary;   //!
+      
+   // glee
+   TBranch        *b_trackstub_candidate_veto_score;   //!	   
+   TBranch        *b_trackstub_num_candidates;  
+   TBranch        *b_reco_vertex_x;   //!
+   TBranch        *b_reco_vertex_y;   //!
+   TBranch        *b_reco_vertex_z;   //!    
+   TBranch        *b_sss_num_candidates;   //!   
+   TBranch        *b_reco_asso_showers;   //!
+   TBranch        *b_reco_asso_tracks;   //!      
 
    mcc9_10_neutrino_selection(TString Label = "", TString Sample = "", TTree *tree=0);
    virtual ~mcc9_10_neutrino_selection();
@@ -1309,7 +1415,9 @@ mcc9_10_neutrino_selection::mcc9_10_neutrino_selection(TString Label, TString Sa
    wc_kine = (TTree*)(f_file->Get("wcpselection/T_KINEvars"));   
 	wc_eval = (TTree*)(f_file->Get("wcpselection/T_eval"));  
 	wc_pfeval = (TTree*)(f_file->Get("wcpselection/T_PFeval"));    
-	wc_sp = (TTree*)(f_file->Get("wcpselection/T_spacepoints"));   
+	wc_sp = (TTree*)(f_file->Get("wcpselection/T_spacepoints"));
+ 	gl_vtx = (TTree*)(f_file->Get("singlephotonana/vertex_tree"));
+ 	dl = (TTree*)(f_file->Get("lantern/EventTree"));        
 
 }
 
@@ -1352,6 +1460,8 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    blip_x = 0;
    blip_y = 0;
    blip_z = 0;
+   blip_dx = 0;
+   blip_dw = 0;   
    blip_energy = 0;
    blip_charge = 0;
    blip_nplanes = 0;
@@ -1365,6 +1475,7 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    blip_pl0_bydeadwire = 0;
    blip_pl1_bydeadwire = 0;
    blip_pl2_bydeadwire = 0;
+   blip_true_pdg = 0;
    blip_true_g4id = 0;
    blip_true_energy = 0;
    dtrk_x_boundary = 0;
@@ -1473,6 +1584,13 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    pfng2shrfrac = 0;
    pfng2mclfrac = 0;
    pfng2dfsfrac = 0;
+   pfng2bkgfrac = 0;
+   pfng2mipavrg = 0;
+   pfng2hipavrg = 0;
+   pfng2shravrg = 0;
+   pfng2mclavrg = 0;
+   pfng2dfsavrg = 0;
+   pfng2bkgavrg = 0;
    pfnunhits = 0;
    pflepnhits = 0;
    pfpronhits = 0;
@@ -1593,7 +1711,10 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
 	Trecchargeblob_spacepoints_q = 0;
 	Trecchargeblob_spacepoints_cluster_id = 0;
 	Trecchargeblob_spacepoints_real_cluster_id = 0;
-	Trecchargeblob_spacepoints_sub_cluster_id = 0;	   
+	Trecchargeblob_spacepoints_sub_cluster_id = 0;	  
+   
+   // glee
+   trackstub_candidate_veto_score = 0;   
 
    // Set branch addresses and branch pointers
 
@@ -1611,6 +1732,8 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("blip_x", &blip_x, &b_blip_x);
    fChain->SetBranchAddress("blip_y", &blip_y, &b_blip_y);
    fChain->SetBranchAddress("blip_z", &blip_z, &b_blip_z);
+   fChain->SetBranchAddress("blip_dx", &blip_dx, &b_blip_dx);
+   fChain->SetBranchAddress("blip_dw", &blip_dw, &b_blip_dw);   
    fChain->SetBranchAddress("blip_energy", &blip_energy, &b_blip_energy);
    fChain->SetBranchAddress("blip_charge", &blip_charge, &b_blip_charge);
    fChain->SetBranchAddress("blip_nplanes", &blip_nplanes, &b_blip_nplanes);
@@ -1624,6 +1747,7 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("blip_pl0_bydeadwire", &blip_pl0_bydeadwire, &b_blip_pl0_bydeadwire);
    fChain->SetBranchAddress("blip_pl1_bydeadwire", &blip_pl1_bydeadwire, &b_blip_pl1_bydeadwire);
    fChain->SetBranchAddress("blip_pl2_bydeadwire", &blip_pl2_bydeadwire, &b_blip_pl2_bydeadwire);
+   fChain->SetBranchAddress("blip_true_pdg", &blip_true_pdg, &b_blip_true_pdg);
    fChain->SetBranchAddress("blip_true_g4id", &blip_true_g4id, &b_blip_true_g4id);
    fChain->SetBranchAddress("blip_true_energy", &blip_true_energy, &b_blip_true_energy);
    fChain->SetBranchAddress("dvtx", &dvtx, &b_dvtx);
@@ -1867,17 +1991,26 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("slcng2shr", &slcng2shr, &b_slcng2shr);
    fChain->SetBranchAddress("slcng2mcl", &slcng2mcl, &b_slcng2mcl);
    fChain->SetBranchAddress("slcng2dfs", &slcng2dfs, &b_slcng2dfs);
+   fChain->SetBranchAddress("slcng2bkg", &slcng2bkg, &b_slcng2bkg);
    fChain->SetBranchAddress("clung2mip", &clung2mip, &b_clung2mip);
    fChain->SetBranchAddress("clung2hip", &clung2hip, &b_clung2hip);
    fChain->SetBranchAddress("clung2shr", &clung2shr, &b_clung2shr);
    fChain->SetBranchAddress("clung2mcl", &clung2mcl, &b_clung2mcl);
    fChain->SetBranchAddress("clung2dfs", &clung2dfs, &b_clung2dfs);
+   fChain->SetBranchAddress("clung2bkg", &clung2bkg, &b_clung2bkg);
    fChain->SetBranchAddress("pfng2semlabel", &pfng2semlabel, &b_pfng2semlabel);
    fChain->SetBranchAddress("pfng2mipfrac", &pfng2mipfrac, &b_pfng2mipfrac);
    fChain->SetBranchAddress("pfng2hipfrac", &pfng2hipfrac, &b_pfng2hipfrac);
    fChain->SetBranchAddress("pfng2shrfrac", &pfng2shrfrac, &b_pfng2shrfrac);
    fChain->SetBranchAddress("pfng2mclfrac", &pfng2mclfrac, &b_pfng2mclfrac);
    fChain->SetBranchAddress("pfng2dfsfrac", &pfng2dfsfrac, &b_pfng2dfsfrac);
+   fChain->SetBranchAddress("pfng2bkgfrac", &pfng2bkgfrac, &b_pfng2bkgfrac);
+   fChain->SetBranchAddress("pfng2mipavrg", &pfng2mipavrg, &b_pfng2mipavrg);
+   fChain->SetBranchAddress("pfng2hipavrg", &pfng2hipavrg, &b_pfng2hipavrg);
+   fChain->SetBranchAddress("pfng2shravrg", &pfng2shravrg, &b_pfng2shravrg);
+   fChain->SetBranchAddress("pfng2mclavrg", &pfng2mclavrg, &b_pfng2mclavrg);
+   fChain->SetBranchAddress("pfng2dfsavrg", &pfng2dfsavrg, &b_pfng2dfsavrg);
+   fChain->SetBranchAddress("pfng2bkgavrg", &pfng2bkgavrg, &b_pfng2bkgavrg);
    fChain->SetBranchAddress("pi0_mcgamma0_e", &pi0_mcgamma0_e, &b_pi0_mcgamma0_e);
    fChain->SetBranchAddress("pi0_mcgamma0_px", &pi0_mcgamma0_px, &b_pi0_mcgamma0_px);
    fChain->SetBranchAddress("pi0_mcgamma0_py", &pi0_mcgamma0_py, &b_pi0_mcgamma0_py);
@@ -2106,6 +2239,7 @@ void mcc9_10_neutrino_selection::Init(TTree *tree)
    fChain->SetBranchAddress("trk_avg_deflection_stdev_v", &trk_avg_deflection_stdev_v, &b_trk_avg_deflection_stdev_v);
    fChain->SetBranchAddress("trk_avg_deflection_separation_mean_v", &trk_avg_deflection_separation_mean_v, &b_trk_avg_deflection_separation_mean_v);
    fChain->SetBranchAddress("trk_end_spacepoints_v", &trk_end_spacepoints_v, &b_trk_end_spacepoints_v);
+   fChain->SetBranchAddress("shr_score", &shr_score, &b_shr_score);
 
    Notify();
 
